@@ -1,5 +1,5 @@
 {
-  "name": "cyclone-styles",
+  "name": "cyclonewind",
   "version": "0.0.2-beta",
   "description": "The most complete Tailwind CSS implementation for React Native with 8,220+ utilities, global configuration, theme customization, dark mode, responsive design, and NativeWind-style setup",
   "main": "lib/index.js",
