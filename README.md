@@ -6,25 +6,25 @@
 [![React Native](https://img.shields.io/badge/React%20Native-Ready-green.svg?style=flat-square)](https://reactnative.dev/)
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](LICENSE)
 
-A complete, pure React Native implementation of Tailwind CSS utilities with NativeWind-compatible syntax and global configuration. Built for performance and simplicity.
+A complete, pure React Native implementation of Tailwind CSS utilities with **NativeWind-compatible className syntax** and global configuration. Built for performance and simplicity.
 
 ## ✨ Features
 
-**The most complete Tailwind CSS implementation for React Native** with 8,220+ utilities, dark mode, responsive design, and global configuration like NativeWind.
+**The most complete Tailwind CSS implementation for React Native** with 8,220+ utilities, **perfect NativeWind-style experience**.
 
 - 🎯 **Complete Tailwind Coverage** - All 8,220+ utilities with full React Native compatibility
-- 🚀 **Enhanced cs() API** - Clean syntax: `cs("flex-1 bg-blue-500 text-white")`
-- 🌐 **Global Configuration** - NativeWind-style global import with theme customization
-- 🎯 **NEW: className Support** - Use `className` prop directly like NativeWind
-- ⚡ **Arbitrary Values** - Full support: `cs("bg-[#ff0000] w-[200px] text-[16px]")`
-- 🎨 **Custom Theme System** - Override colors, spacing, fonts with nested configuration
-- 🌓 **Dark Mode Support** - Automatic theme switching with `dark:` prefix
+- 🌟 **NativeWind-style className** - Use `className` prop globally without imports (after preset)
+- 🚀 **Enhanced cs() API** - Manual import for dynamic styling: `cs("flex-1 bg-blue-500")`
+- ⚡ **Direct Styles** - Pre-computed StyleSheet objects with `$` functions
+- � **Global Configuration** - One-time preset import enables everything
+- ⚡ **Arbitrary Values** - Full support: `className="bg-[#ff0000] w-[200px]"`
+- 🎨 **Built-in Theme System** - Automatic dark mode, custom colors, and real-time updates
+- 🌓 **Smart Theme Integration** - className gets automatic theme, cs()/$ sync with ThemeProvider
 - 📱 **Responsive Design** - Mobile-first breakpoints (`sm:`, `md:`, `lg:`, `xl:`, `2xl:`)
-- 🔧 **Custom Utilities** - Add your own utilities and extend existing ones
+- 🔧 **Fixed Spacing** - Gap and space utilities work correctly on elements
 - 🔒 **TypeScript First** - Full type safety and IntelliSense
 - ⚡ **Zero Dependencies** - Only requires React Native
 - 🚀 **Performance Optimized** - Efficient caching and StyleSheet usage
-- 🎪 **React Native Native** - Built specifically for React Native (not a web port)
 
 ## 🚀 Quick Start
 
@@ -36,15 +36,15 @@ npm install cyclonewind
 yarn add cyclonewind
 ```
 
-### Option 1: Global Setup (Recommended - NativeWind Style)
+### 🌟 Perfect NativeWind Experience (Recommended)
 
-Set up once in your root layout and use everywhere:
+**✨ className works globally without imports after preset setup**
 
-**1. Install and Setup**
+**1. One-time Setup**
 
 ```tsx
 // App.tsx or _layout.tsx (root file)
-import "cyclonewind/preset"; // This sets up everything globally
+import "cyclonewind/preset"; // Enables className globally
 import { ThemeProvider } from "cyclonewind";
 
 export default function App() {
@@ -56,57 +56,178 @@ export default function App() {
 }
 ```
 
-**2. Use Anywhere Without Imports**
+**2. Use className Anywhere (No imports needed!)**
 
 ```tsx
-// Any component file - no imports needed!
+// Any component file - className works without imports!
 import React from "react";
 import { View, Text } from "react-native";
 
 export default function MyComponent() {
   return (
-    <View style={cs("flex-1 bg-white dark:bg-gray-900 p-4")}>
-      <Text style={cs("text-xl font-bold text-gray-900 dark:text-white")}>
-        Hello Cyclone Styles! 🌪️
+    <View className="flex-1 bg-white dark:bg-gray-900 p-4">
+      <Text className="text-xl font-bold text-gray-900 dark:text-white">
+        Hello NativeWind-style! 🌪️
       </Text>
     </View>
   );
 }
 ```
 
-### Option 2: Manual Setup
+### Option 2: Manual Imports (When Needed)
 
-If you prefer manual imports:
+**cs() and direct styles require explicit imports:**
 
 ```tsx
 import React from "react";
-import { View, Text, Image } from "react-native";
-import { cs, ThemeProvider } from "cyclonewind";
+import { View, Text } from "react-native";
+// Manual imports for cs() and $ when needed
+import { cs, $ } from "cyclonewind";
 
-function MyApp() {
+export default function MyComponent() {
   return (
-    <View style={cs("flex-1 bg-white dark:bg-gray-900 p-4")}>
-      <Text style={cs("text-xl font-bold text-gray-900 dark:text-white")}>
-        Hello CycloneWind! 🌪️
-      </Text>
+    <View className="flex-1 bg-white p-4">
+      {/* className works globally */}
+      <Text className="text-xl font-bold mb-4">Global className</Text>
 
-      {/* ✨ NEW: cs() works with all components without specifying type */}
-      <Image
-        source={{ uri: "https://example.com/image.jpg" }}
-        style={cs("w-20 h-20 rounded-full mt-4")}
-      />
+      {/* cs() requires import for dynamic styling */}
+      <View style={cs(`p-4 ${isActive ? "bg-green-500" : "bg-gray-300"}`)}>
+        <Text style={cs("text-white")}>Dynamic with cs()</Text>
+      </View>
+
+      {/* $ requires import for direct styles */}
+      <View style={[$.bgBlue500(), $.p4(), $.rounded()]}>
+        <Text style={[$.textWhite()]}>Direct styles with $</Text>
+      </View>
     </View>
   );
 }
+```
 
-export default function App() {
+## 🎯 How It Works
+
+**CycloneWind provides the perfect NativeWind experience:**
+
+### ✅ What Works Globally (No Imports)
+
+- **className prop** - `<View className="flex-1 bg-blue-500" />`
+- **Built-in theme support** - `className="bg-white dark:bg-gray-900"`
+- **All Tailwind utilities** - spacing, colors, layout, typography, etc.
+- **Responsive breakpoints** - `className="p-2 md:p-4 lg:p-6"`
+
+### 🔧 What Needs Manual Import
+
+- **cs() function** - `import { cs } from 'cyclonewind'` for dynamic styling
+- **Direct styles** - `import { $ } from 'cyclonewind'` for performance
+- **Theme control** - `import { ThemeProvider, useTheme } from 'cyclonewind'`
+
+### 🌟 Perfect for Migration
+
+- **From NativeWind**: Just change imports and you're done!
+- **From Tailwind CSS**: Same className syntax you know and love
+- **From other libraries**: Gradual adoption with manual imports
+
+## 🔥 Recent Fixes & Improvements
+
+### ✅ Fixed Global className Support
+
+- **NativeWind-identical behavior**: className works globally without imports
+- **Theme integration**: Automatic dark mode support in className
+- **Manual imports**: cs() and $ functions require explicit imports (as intended)
+
+### ✅ Fixed Spacing & Gap Utilities
+
+- **Correct gap behavior**: `gap-4` applies to container, spaces direct children
+- **Fixed space utilities**: `space-x-4` and `space-y-4` use proper gap properties
+- **No child interference**: Spacing affects target element only, not nested children
+
+### ✅ Enhanced Theme System
+
+- **Built-in theme**: className gets automatic theme support (no provider needed)
+- **ThemeProvider sync**: cs() and $ functions sync with ThemeProvider
+- **Real-time updates**: Theme changes apply instantly to all styling approaches
+
+## 🚀 Updated Quick Examples
+
+### ✨ Global className (NativeWind-style)
+
+```tsx
+// After: import 'cyclonewind/preset'
+import React from "react";
+import { View, Text, Pressable } from "react-native";
+
+export default function MyComponent() {
   return (
-    <ThemeProvider>
-      <MyApp />
-    </ThemeProvider>
+    <View className="flex-1 bg-white dark:bg-gray-900 p-6">
+      <Text className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+        Perfect NativeWind Experience! 🌪️
+      </Text>
+
+      {/* Fixed spacing - gap works on container */}
+      <View className="flex-row gap-4 mb-6">
+        <View className="flex-1 bg-blue-500 p-3 rounded">
+          <Text className="text-white text-center">Item 1</Text>
+        </View>
+        <View className="flex-1 bg-green-500 p-3 rounded">
+          <Text className="text-white text-center">Item 2</Text>
+        </View>
+      </View>
+
+      {/* Built-in theme support */}
+      <Pressable className="bg-blue-500 dark:bg-blue-600 p-4 rounded-lg">
+        <Text className="text-white text-center font-semibold">
+          Theme Support Built-in!
+        </Text>
+      </Pressable>
+    </View>
   );
 }
 ```
+
+### 🔧 Manual cs() and $ (When Needed)
+
+```tsx
+import React from "react";
+import { View, Text } from "react-native";
+import { cs, $ } from "cyclonewind"; // Manual imports
+
+export default function DynamicComponent() {
+  const [isActive, setIsActive] = useState(false);
+
+  return (
+    <View className="flex-1 p-4">
+      {/* Static styling with className */}
+      <Text className="text-lg font-bold mb-4">Mixed Approaches</Text>
+
+      {/* Dynamic styling with cs() */}
+      <View
+        style={cs(`p-4 rounded ${isActive ? "bg-green-500" : "bg-gray-300"}`)}
+      >
+        <Text style={cs(`${isActive ? "text-white" : "text-gray-700"}`)}>
+          Dynamic with cs() function
+        </Text>
+      </View>
+
+      {/* Performance styling with $ */}
+      <View style={[$.mt4(), $.p4(), $.bgBlue500(), $.rounded()]}>
+        <Text style={[$.textWhite(), $.fontBold()]}>
+          Direct styles for performance
+        </Text>
+      </View>
+    </View>
+  );
+}
+```
+
+export default function App() {
+return (
+<ThemeProvider>
+<MyApp />
+</ThemeProvider>
+);
+}
+
+````
 
 ## 🎯 NEW: NativeWind-style className Support
 
@@ -134,7 +255,7 @@ export default function MyComponent() {
     </View>
   );
 }
-```
+````
 
 ### Mixed Usage - Best of Both Worlds
 
@@ -511,17 +632,84 @@ Use custom values with bracket notation - all numbers default to pixels:
 
 ## 🆚 Comparison
 
-| Feature              | CycloneWind      | NativeWind        | Tailwind RN |
-| -------------------- | ---------------- | ----------------- | ----------- |
-| **Utilities**        | ✅ 8,220+        | ✅ Most           | ⚠️ Limited  |
-| **Global Setup**     | ✅ Built-in      | ✅ Yes            | ❌ No       |
-| **Custom Theme**     | ✅ Full support  | ✅ Yes            | ⚠️ Limited  |
-| **Arbitrary Values** | ✅ Pixel-default | ✅ Yes            | ⚠️ Basic    |
-| **Dark Mode**        | ✅ Built-in      | ✅ Yes            | ❌ Manual   |
-| **Responsive**       | ✅ Built-in      | ✅ Yes            | ❌ Manual   |
-| **TypeScript**       | ✅ Perfect       | ✅ Good           | ⚠️ Basic    |
-| **Performance**      | ✅ Optimized     | ✅ Good           | ✅ Good     |
-| **Setup**            | ✅ Zero config   | ⚠️ Requires setup | ✅ Simple   |
+| Feature               | CycloneWind          | NativeWind        | Tailwind RN |
+| --------------------- | -------------------- | ----------------- | ----------- |
+| **className Global**  | ✅ Perfect (like NW) | ✅ Yes            | ❌ No       |
+| **Utilities**         | ✅ 8,220+            | ✅ Most           | ⚠️ Limited  |
+| **Manual cs()/$ API** | ✅ Available         | ❌ No             | ✅ Yes      |
+| **Built-in Theme**    | ✅ className Auto    | ⚠️ Requires setup | ❌ Manual   |
+| **Fixed Gap/Spacing** | ✅ Proper behavior   | ✅ Good           | ⚠️ Issues   |
+| **Arbitrary Values**  | ✅ Pixel-default     | ✅ Yes            | ⚠️ Basic    |
+| **Dark Mode**         | ✅ Built-in          | ✅ Yes            | ❌ Manual   |
+| **Responsive**        | ✅ Built-in          | ✅ Yes            | ❌ Manual   |
+| **TypeScript**        | ✅ Perfect           | ✅ Good           | ⚠️ Basic    |
+| **Migration**         | ✅ Drop-in replace   | ⚠️ Config needed  | ⚠️ Partial  |
+
+## 🔧 Troubleshooting
+
+### className Not Working?
+
+**Problem**: `className` prop not converting to styles
+
+```tsx
+// ❌ Won't work without preset
+<View className="flex-1 bg-blue-500" />
+```
+
+**Solution**: Import the preset once in your root file
+
+```tsx
+// ✅ Add this to App.tsx or _layout.tsx
+import "cyclonewind/preset";
+```
+
+### cs() or $ Not Available?
+
+**Problem**: `cs is not defined` or `$ is not defined`
+
+```tsx
+// ❌ cs() and $ need manual imports
+const style = cs("bg-blue-500"); // Error!
+```
+
+**Solution**: Import explicitly when using cs() or $
+
+```tsx
+// ✅ Manual import required
+import { cs, $ } from "cyclonewind";
+const style = cs("bg-blue-500");
+```
+
+### Gap/Spacing Not Working on Older RN?
+
+**Problem**: `gap`, `columnGap`, `rowGap` not supported
+
+```tsx
+// ❌ Might not work on React Native < 0.71
+<View className="gap-4" />
+```
+
+**Solution**: Use padding/margin alternatives or upgrade RN
+
+```tsx
+// ✅ Alternative for older versions
+<View className="space-y-4" /> // Uses padding
+```
+
+### Theme Not Updating?
+
+**Problem**: Dark mode changes not applying
+
+**Solution**: Wrap app with ThemeProvider for cs() and $
+
+```tsx
+// ✅ Required for theme sync with cs() and $
+import { ThemeProvider } from "cyclonewind";
+
+<ThemeProvider>
+  <App />
+</ThemeProvider>;
+```
 
 ## 🔄 Migration from NativeWind
 

@@ -1,21 +1,11 @@
 /**
- * Cyclone Styles Preset - Global Import
- * Import this file to automatically configure cyclone-styles globally
- * Similar to how NativeWind's global import works
+ * CycloneWind Preset - Global Import
+ * Import this file to automatically enable className prop globally (like NativeWind)
+ * cs() and direct styles still require manual imports
  */
 
 import { setupCycloneStyles } from "./global";
-import { cs } from "./cs";
-import { setupClassNameTransformer } from "./className";
-import {
-  $,
-  getGlobalStyles,
-  getLayoutStyles,
-  getSpacingStyles,
-  getColorStyles,
-  getTypographyStyles,
-  getBorderStyles,
-} from "./globalStyles";
+import { setupClassNameTransformer, updateClassNameTheme } from "./className";
 
 // Auto-setup with default configuration
 setupCycloneStyles();
@@ -23,35 +13,48 @@ setupCycloneStyles();
 // Setup className transformer for NativeWind-style usage
 setupClassNameTransformer();
 
-// Re-export everything for convenience
-export * from "./index";
+// Setup theme synchronization for className
+// This ensures className automatically gets theme updates
+let currentTheme = { isDark: false };
 
-// Make cs and direct styles available globally for easier usage
-declare global {
-  const cs: typeof import("./cs").cs;
-  const $: typeof import("./globalStyles").$;
-  const globalStyles: typeof getGlobalStyles;
-  const layoutStyles: typeof getLayoutStyles;
-  const spacingStyles: typeof getSpacingStyles;
-  const colorStyles: typeof getColorStyles;
-  const typographyStyles: typeof getTypographyStyles;
-  const borderStyles: typeof getBorderStyles;
+// Function to sync theme between global system and className
+function syncThemeWithClassName() {
+  // Listen for system theme changes
+  if (typeof window !== "undefined" && window.matchMedia) {
+    const darkModeQuery = window.matchMedia("(prefers-color-scheme: dark)");
+
+    const updateTheme = (e: MediaQueryListEvent | MediaQueryList) => {
+      const isDark = e.matches;
+      currentTheme.isDark = isDark;
+      updateClassNameTheme(isDark);
+    };
+
+    // Set initial theme
+    updateTheme(darkModeQuery);
+
+    // Listen for changes
+    darkModeQuery.addListener(updateTheme);
+  }
 }
 
-// Note: Global assignment is environment-specific
-// For React Native, you can manually import these functions
-// Example: import { $, globalStyles } from 'cyclone-styles/preset';
+// Initialize theme sync (works in web, safe in React Native)
+try {
+  syncThemeWithClassName();
+} catch (error) {
+  // React Native environment - theme will be controlled by ThemeProvider
+}
 
-// Export a version that doesn't require imports
-export const globalCs = require("./cs").cs;
+// Export theme control for manual theme changes
+export function setGlobalTheme(isDark: boolean) {
+  currentTheme.isDark = isDark;
+  updateClassNameTheme(isDark);
+}
 
-export default {
-  setup: setupCycloneStyles,
-  $,
-  globalStyles: getGlobalStyles,
-  layoutStyles: getLayoutStyles,
-  spacingStyles: getSpacingStyles,
-  colorStyles: getColorStyles,
-  typographyStyles: getTypographyStyles,
-  borderStyles: getBorderStyles,
-};
+export function getGlobalTheme() {
+  return currentTheme;
+}
+
+// Note: className prop is now available globally without any imports!
+// cs() function and direct styles still need explicit imports:
+// import { cs } from 'cyclonewind';
+// import { $ } from 'cyclonewind';

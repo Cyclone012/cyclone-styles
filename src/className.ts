@@ -1,10 +1,183 @@
 /**
  * NativeWind-style className prop transformer
- * Automatically converts className to style using cs() function
+ * Automatically converts className to style with built-in styling engine
+ * Works independently without requiring cs() import
  */
 
 import React from "react";
-import { cs } from "./cs";
+import { StyleSheet, ViewStyle, TextStyle, ImageStyle } from "react-native";
+import { styles } from "./styles";
+import { getConfig, getFlattenedColors } from "./config";
+
+// Type for any React Native style
+type Style = ViewStyle | TextStyle | ImageStyle;
+
+// Cache for converted className styles
+const classNameStyleCache = new Map<string, Style>();
+
+// Global theme state (shared with cs function)
+let globalThemeState = { isDark: false };
+
+/**
+ * Convert className string to React Native style
+ * This is a simplified version of cs() specifically for className prop
+ */
+function convertClassNameToStyle(className: string): Style {
+  if (!className || typeof className !== "string") {
+    return {};
+  }
+
+  // Check cache first
+  const cacheKey = `${className}_dark:${globalThemeState.isDark}`;
+  if (classNameStyleCache.has(cacheKey)) {
+    return classNameStyleCache.get(cacheKey)!;
+  }
+
+  // Split class names and process each one
+  const classes = className.split(/\s+/).filter((c) => c.length > 0);
+  const resolvedStyles: Style[] = [];
+
+  for (const cls of classes) {
+    // Handle dark mode prefixes
+    const isDarkClass = cls.startsWith("dark:");
+    if (isDarkClass && !globalThemeState.isDark) {
+      continue; // Skip dark classes when not in dark mode
+    }
+    if (isDarkClass && globalThemeState.isDark) {
+      // Process without dark: prefix
+      const classWithoutDark = cls.replace("dark:", "");
+      const style = getStyleForClassName(classWithoutDark);
+      if (style) resolvedStyles.push(style);
+      continue;
+    }
+
+    // Handle regular classes
+    const style = getStyleForClassName(cls);
+    if (style) {
+      resolvedStyles.push(style);
+    }
+  }
+
+  // Flatten styles
+  const flattenedStyle = StyleSheet.flatten(resolvedStyles);
+
+  // Cache result
+  classNameStyleCache.set(cacheKey, flattenedStyle);
+
+  return flattenedStyle;
+}
+
+/**
+ * Get style for a single class name
+ */
+function getStyleForClassName(className: string): Style | null {
+  // Handle arbitrary values (e.g., h-[32], bg-[#ff0000])
+  if (className.includes("[") && className.includes("]")) {
+    return handleArbitraryValue(className);
+  }
+
+  // Check built-in styles first
+  if (styles[className as keyof typeof styles]) {
+    return styles[className as keyof typeof styles] as Style;
+  }
+
+  // Convert kebab-case to camelCase for style lookup
+  const styleKey = convertToStyleKey(className);
+  if (styles[styleKey as keyof typeof styles]) {
+    return styles[styleKey as keyof typeof styles] as Style;
+  }
+
+  // Handle special color cases
+  return handleSpecialColorCase(className);
+}
+
+/**
+ * Handle arbitrary values like h-[32], bg-[#ff0000], etc.
+ */
+function handleArbitraryValue(className: string): Style | null {
+  const match = className.match(/^(.+?)-\[(.+?)\]$/);
+  if (!match) return null;
+
+  const [, prefix, value] = match;
+
+  // Handle different types of arbitrary values
+  switch (prefix) {
+    case "w":
+      return { width: parseArbitraryValue(value) };
+    case "h":
+      return { height: parseArbitraryValue(value) };
+    case "p":
+      return { padding: parseArbitraryValue(value) };
+    case "m":
+      return { margin: parseArbitraryValue(value) };
+    case "bg":
+      return { backgroundColor: value };
+    case "text":
+      if (value.startsWith("#") || value.startsWith("rgb")) {
+        return { color: value };
+      }
+      return { fontSize: parseArbitraryValue(value) };
+    // Add more as needed
+    default:
+      return null;
+  }
+}
+
+/**
+ * Parse arbitrary value to number (defaults to pixels)
+ */
+function parseArbitraryValue(value: string): number {
+  const num = parseInt(value, 10);
+  return isNaN(num) ? 0 : num;
+}
+
+/**
+ * Convert kebab-case to camelCase
+ */
+function convertToStyleKey(className: string): string {
+  return className.replace(/-([a-z])/g, (_, letter) => letter.toUpperCase());
+}
+
+/**
+ * Handle special color cases like text-blue-500, bg-red-400
+ */
+function handleSpecialColorCase(className: string): Style | null {
+  const colors = getFlattenedColors();
+
+  // Handle text colors (text-color-shade)
+  if (className.startsWith("text-")) {
+    const colorName = className.replace("text-", "");
+    if (colors[colorName]) {
+      return { color: colors[colorName] };
+    }
+  }
+
+  // Handle background colors (bg-color-shade)
+  if (className.startsWith("bg-")) {
+    const colorName = className.replace("bg-", "");
+    if (colors[colorName]) {
+      return { backgroundColor: colors[colorName] };
+    }
+  }
+
+  // Handle border colors (border-color-shade)
+  if (className.startsWith("border-") && !className.match(/border-\d/)) {
+    const colorName = className.replace("border-", "");
+    if (colors[colorName]) {
+      return { borderColor: colors[colorName] };
+    }
+  }
+
+  return null;
+}
+
+/**
+ * Update theme state (called by global theme system)
+ */
+export function updateClassNameTheme(isDark: boolean) {
+  globalThemeState.isDark = isDark;
+  classNameStyleCache.clear(); // Clear cache when theme changes
+}
 
 // Store original createElement to wrap it
 const originalCreateElement = React.createElement;
@@ -47,8 +220,8 @@ function transformClassNameToStyle(props: any) {
 
   const { className, style, ...restProps } = props;
 
-  // Convert className to style using cs() function
-  const classNameStyle = cs(className);
+  // Convert className to style using our standalone converter
+  const classNameStyle = convertClassNameToStyle(className);
 
   // Merge className style with existing style
   const mergedStyle = style
