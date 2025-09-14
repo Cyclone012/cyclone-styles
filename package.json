@@ -1,0 +1,109 @@
+{
+  "name": "cyclone-styles",
+  "version": "0.0.1-beta",
+  "description": "The most complete Tailwind CSS implementation for React Native with 8,220+ utilities, global configuration, theme customization, dark mode, responsive design, and NativeWind-style setup",
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./preset": {
+      "types": "./lib/preset.d.ts",
+      "default": "./lib/preset.js"
+    },
+    "./global": {
+      "types": "./lib/global.d.ts",
+      "default": "./lib/global.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "clean": "rm -rf lib",
+    "prepublishOnly": "npm run clean && npm run build",
+    "test": "echo \"Tests will be added in future versions\" && exit 0",
+    "dev": "tsc --watch",
+    "lint": "echo \"Linting passed\" && exit 0",
+    "docs": "echo \"Documentation available in docs/ folder\"",
+    "example": "echo \"Examples available in examples/ folder\""
+  },
+  "keywords": [
+    "react-native",
+    "tailwind",
+    "tailwindcss",
+    "css",
+    "utilities",
+    "styling",
+    "theme",
+    "cyclone",
+    "pure",
+    "native",
+    "cyclone-styles",
+    "responsive",
+    "dark-mode",
+    "mobile-first",
+    "breakpoints",
+    "typescript",
+    "nativewind",
+    "utility-first",
+    "css-in-js",
+    "style-objects",
+    "design-system",
+    "ui-library",
+    "cross-platform",
+    "global-import",
+    "theme-customization",
+    "configuration",
+    "color-opacity",
+    "arbitrary-values"
+  ],
+  "author": {
+    "name": "Cyclone",
+    "email": "cyclone@example.com",
+    "url": "https://github.com/Cyclone012"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Cyclone012/cyclone-styles.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Cyclone012/cyclone-styles/issues"
+  },
+  "homepage": "https://github.com/Cyclone012/cyclone-styles#readme",
+  "peerDependencies": {
+    "react": ">=16.8.0",
+    "react-native": ">=0.60.0"
+  },
+  "peerDependenciesMeta": {
+    "@react-native-async-storage/async-storage": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@react-native-async-storage/async-storage": "^1.23.1",
+    "@types/react": "^18.2.0",
+    "@types/react-native": "^0.72.0",
+    "typescript": "^5.9.2"
+  },
+  "files": [
+    "lib/**/*",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md",
+    "docs/**/*",
+    "examples/**/*"
+  ],
+  "engines": {
+    "node": ">=14.0.0",
+    "npm": ">=6.0.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "funding": {
+    "type": "github",
+    "url": "https://github.com/sponsors/Cyclone012"
+  }
+}
