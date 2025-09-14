@@ -2,6 +2,31 @@
 
 All notable changes to Cyclone Styles will be documented in this file.
 
+## [0.0.4] - 2025-09-15
+
+### 🛠️ Bug Fixes & React Native Compatibility
+
+- **Fixed corrupted index.ts**: Removed corrupted text that was causing build errors
+- **Enhanced React Native Integration**: Improved className support for standard React Native components
+- **Better Component Compatibility**: Works seamlessly with View, Text, SafeAreaView, ScrollView, Pressable, and all standard RN components
+- **Cleaned Documentation**: Fixed README formatting and provided clear React Native + Expo setup examples
+- **Enhanced Custom Class Registration**: Improved registerCustomClass and registerCustomClasses functions
+
+### 📚 Documentation Improvements
+
+- **Clear React Native Examples**: Updated all examples to use standard React Native components
+- **Expo Router Integration**: Added proper setup examples for Expo Router with Stack and Slot
+- **Standard Component Usage**: Emphasized using standard RN components rather than custom wrapper components
+- **Real-world Examples**: Added practical examples showing className with SafeAreaView, ScrollView, etc.
+
+### 🎯 What's Fixed
+
+- ✅ Build errors resolved
+- ✅ Proper TypeScript exports
+- ✅ Standard React Native component compatibility
+- ✅ Clean documentation and examples
+- ✅ Better Expo Router integration examples
+
 ## [0.0.3] - 2025-09-14
 
 ### 🎨 Major Feature: Custom Styles as className Utilities

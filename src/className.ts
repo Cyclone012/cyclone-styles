@@ -1,7 +1,7 @@
 /**
- * NativeWind-style className prop transformer
- * Automatically converts className to style with built-in styling engine
- * Works independently without requiring cs() import
+ * React Native className support - Works with standard RN components
+ * Patches React.createElement to automatically convert className to style
+ * Use with standard React Native components: View, Text, SafeAreaView, etc.
  */
 
 import React from "react";
@@ -15,12 +15,29 @@ type Style = ViewStyle | TextStyle | ImageStyle;
 // Cache for converted className styles
 const classNameStyleCache = new Map<string, Style>();
 
+// Store for custom registered classes
+const customClasses: Record<string, Style> = {};
+
 // Global theme state (shared with cs function)
 let globalThemeState = { isDark: false };
 
 /**
+ * Register a custom class that can be used in className
+ */
+export function registerCustomClass(name: string, styleObject: Style) {
+  customClasses[name] = styleObject;
+}
+
+/**
+ * Register multiple custom classes at once
+ */
+export function registerCustomClasses(classMap: Record<string, Style>) {
+  Object.assign(customClasses, classMap);
+}
+
+/**
  * Convert className string to React Native style
- * This is a simplified version of cs() specifically for className prop
+ * This works with all standard React Native components
  */
 function convertClassNameToStyle(className: string): Style {
   if (!className || typeof className !== "string") {
@@ -38,6 +55,12 @@ function convertClassNameToStyle(className: string): Style {
   const resolvedStyles: Style[] = [];
 
   for (const cls of classes) {
+    // Check custom classes first
+    if (customClasses[cls]) {
+      resolvedStyles.push(customClasses[cls]);
+      continue;
+    }
+
     // Handle dark mode prefixes
     const isDarkClass = cls.startsWith("dark:");
     if (isDarkClass && !globalThemeState.isDark) {
@@ -46,6 +69,13 @@ function convertClassNameToStyle(className: string): Style {
     if (isDarkClass && globalThemeState.isDark) {
       // Process without dark: prefix
       const classWithoutDark = cls.replace("dark:", "");
+
+      // Check custom classes first for dark mode
+      if (customClasses[classWithoutDark]) {
+        resolvedStyles.push(customClasses[classWithoutDark]);
+        continue;
+      }
+
       const style = getStyleForClassName(classWithoutDark);
       if (style) resolvedStyles.push(style);
       continue;

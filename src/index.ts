@@ -1,4 +1,12 @@
-// NativeWind Clone - Main Entry Point
+// CycloneWind - Main Entry Point
+export { default as cs } from "./customStyles";
+export { default as theme } from "./theme";
+export {
+  convertClassNameToStyle,
+  updateClassNameTheme,
+  registerCustomClass,
+  registerCustomClasses,
+} from "./className";
 export {
   styles,
   type StylesType,
@@ -21,11 +29,6 @@ export {
   type ThemeMode,
   type ThemeContextType,
 } from "./theme";
-
-// Export the new class-based API for easier usage
-export { default as cs } from "./customStyles";
-export { default as theme } from "./theme";
-export { convertClassNameToStyle, updateClassNameTheme } from "./className";
 
 // Export global configuration and setup
 export {

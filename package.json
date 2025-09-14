@@ -1,6 +1,6 @@
 {
   "name": "cyclonewind",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "The most complete Tailwind CSS implementation for React Native with perfect NativeWind-style className support, fixed spacing utilities, and enhanced theme system",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
