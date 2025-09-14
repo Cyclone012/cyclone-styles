@@ -23,7 +23,9 @@ export {
 } from "./theme";
 
 // Export the new class-based API for easier usage
-export { cs, cx, merge } from "./cs";
+export { default as cs } from "./customStyles";
+export { default as theme } from "./theme";
+export { convertClassNameToStyle, updateClassNameTheme } from "./className";
 
 // Export global configuration and setup
 export {
@@ -51,6 +53,31 @@ export {
   setupClassNameTransformer,
   resetClassNameTransformer,
 } from "./className";
+
+// Export custom styles and override system
+export {
+  createCustomStyle,
+  createCustomStyles,
+  combineStyles,
+  createVariant,
+  conditionalStyle,
+  selectStyle,
+  overrideStyle,
+  mergeWithPriority,
+  excludeProperties,
+  createThemedCustomStyle,
+  createResponsiveCustomStyle,
+  spacingUtils,
+  colorUtils,
+  layoutUtils,
+  borderUtils,
+  styleTemplates,
+  animationUtils,
+  debugUtils,
+  configureStyles,
+  getStyleConfig,
+  createConfiguredStyle,
+} from "./customStyles";
 
 // Default export for global setup
 export { default } from "./global";

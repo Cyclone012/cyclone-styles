@@ -17,9 +17,26 @@ setupClassNameTransformer();
 // This ensures className automatically gets theme updates
 let currentTheme = { isDark: false };
 
+// Function to detect if we're in React Native environment
+function isReactNative() {
+  return (
+    (typeof navigator !== "undefined" && navigator.product === "ReactNative") ||
+    typeof window === "undefined" ||
+    !window.matchMedia
+  );
+}
+
 // Function to sync theme between global system and className
 function syncThemeWithClassName() {
-  // Listen for system theme changes
+  if (isReactNative()) {
+    // React Native: theme will be controlled by ThemeProvider
+    // Start with light theme as default
+    currentTheme.isDark = false;
+    updateClassNameTheme(false);
+    return;
+  }
+
+  // Web environment: Listen for system theme changes
   if (typeof window !== "undefined" && window.matchMedia) {
     const darkModeQuery = window.matchMedia("(prefers-color-scheme: dark)");
 
@@ -37,12 +54,8 @@ function syncThemeWithClassName() {
   }
 }
 
-// Initialize theme sync (works in web, safe in React Native)
-try {
-  syncThemeWithClassName();
-} catch (error) {
-  // React Native environment - theme will be controlled by ThemeProvider
-}
+// Initialize theme sync
+syncThemeWithClassName();
 
 // Export theme control for manual theme changes
 export function setGlobalTheme(isDark: boolean) {
@@ -50,8 +63,9 @@ export function setGlobalTheme(isDark: boolean) {
   updateClassNameTheme(isDark);
 }
 
+// Export current theme getter
 export function getGlobalTheme() {
-  return currentTheme;
+  return currentTheme.isDark;
 }
 
 // Note: className prop is now available globally without any imports!

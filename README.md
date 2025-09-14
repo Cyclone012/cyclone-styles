@@ -1,149 +1,426 @@
-# 🌪️ CycloneWind
+# 🌪️ CycloneWind# 🌪️ CycloneWind
 
-[![npm version](https://img.shields.io/npm/v/cyclonewind.svg?style=flat-square)](https://www.npmjs.com/package/cyclonewind)
+**The easiest way to use Tailwind CSS in React Native**[![npm version](https://img.shields.io/npm/v/cyclonewind.svg?style=flat-square)](https://www.npmjs.com/package/cyclonewind)
+
 [![npm downloads](https://img.shields.io/npm/dm/cyclonewind.svg?style=flat-square)](https://www.npmjs.com/package/cyclonewind)
-[![TypeScript](https://img.shields.io/badge/TypeScript-Ready-blue.svg?style=flat-square)](https://www.typescriptlang.org/)
+
+A complete, lightweight library that brings Tailwind CSS utilities to React Native with a simple, familiar API.[![TypeScript](https://img.shields.io/badge/TypeScript-Ready-blue.svg?style=flat-square)](https://www.typescriptlang.org/)
+
 [![React Native](https://img.shields.io/badge/React%20Native-Ready-green.svg?style=flat-square)](https://reactnative.dev/)
-[![License](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](LICENSE)
 
-A complete, pure React Native implementation of Tailwind CSS utilities with **NativeWind-compatible className syntax** and global configuration. Built for performance and simplicity.
+## ✨ Why CycloneWind?[![License](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](LICENSE)
 
-## ✨ Features
+- **🎯 Easy Setup** - Just install and start usingA complete, pure React Native implementation of Tailwind CSS utilities with **NativeWind-compatible className syntax**, **custom styles as className utilities**, and global configuration. Built for performance and simplicity.
 
-**The most complete Tailwind CSS implementation for React Native** with 8,220+ utilities, **perfect NativeWind-style experience**.
+- **🌟 className Support** - Use `className` prop just like in web development
+
+- **🎨 Custom Styles** - Register your own styles and use them as className utilities## ✨ Features
+
+- **🚀 Familiar API** - If you know Tailwind CSS, you already know CycloneWind
+
+- **⚡ TypeScript** - Full type safety out of the box**The most complete Tailwind CSS implementation for React Native** with 8,220+ utilities, **perfect NativeWind-style experience**, and **custom styles that work as className utilities**.
+
+- **📱 React Native Ready** - Works perfectly with all React Native components
 
 - 🎯 **Complete Tailwind Coverage** - All 8,220+ utilities with full React Native compatibility
-- 🌟 **NativeWind-style className** - Use `className` prop globally without imports (after preset)
-- 🚀 **Enhanced cs() API** - Manual import for dynamic styling: `cs("flex-1 bg-blue-500")`
+
+## 🚀 Quick Start- 🌟 **NativeWind-style className** - Use `className` prop globally without imports (after preset)
+
+- 🎨 **Custom Styles as className** - Register custom styles and use them like any other utility class
+
+### 1. Install- 🚀 **Enhanced cs() API** - Manual import for dynamic styling: `cs("flex-1 bg-blue-500")`
+
 - ⚡ **Direct Styles** - Pre-computed StyleSheet objects with `$` functions
-- � **Global Configuration** - One-time preset import enables everything
-- ⚡ **Arbitrary Values** - Full support: `className="bg-[#ff0000] w-[200px]"`
-- 🎨 **Built-in Theme System** - Automatic dark mode, custom colors, and real-time updates
+
+````bash- ⚙️ **Global Configuration** - One-time preset import enables everything
+
+npm install cyclonewind- ⚡ **Arbitrary Values** - Full support: `className="bg-[#ff0000] w-[200px]"`
+
+```- 🎨 **Built-in Theme System** - Automatic dark mode, custom colors, and real-time updates
+
 - 🌓 **Smart Theme Integration** - className gets automatic theme, cs()/$ sync with ThemeProvider
-- 📱 **Responsive Design** - Mobile-first breakpoints (`sm:`, `md:`, `lg:`, `xl:`, `2xl:`)
+
+### 2. Setup (Add to your App.tsx)- 📱 **Responsive Design** - Mobile-first breakpoints (`sm:`, `md:`, `lg:`, `xl:`, `2xl:`)
+
 - 🔧 **Fixed Spacing** - Gap and space utilities work correctly on elements
-- 🔒 **TypeScript First** - Full type safety and IntelliSense
-- ⚡ **Zero Dependencies** - Only requires React Native
-- 🚀 **Performance Optimized** - Efficient caching and StyleSheet usage
+
+```tsx- 🔒 **TypeScript First** - Full type safety and IntelliSense
+
+// App.tsx- ⚡ **Zero Dependencies** - Only requires React Native
+
+import "cyclonewind/preset"; // This line makes className work everywhere- 🚀 **Performance Optimized** - Efficient caching and StyleSheet usage
+
+import { ThemeProvider } from "cyclonewind";
 
 ## 🚀 Quick Start
 
-### Installation
-
-```bash
-npm install cyclonewind
-# or
-yarn add cyclonewind
-```
-
-### 🌟 Perfect NativeWind Experience (Recommended)
-
-**✨ className works globally without imports after preset setup**
-
-**1. One-time Setup**
-
-```tsx
-// App.tsx or _layout.tsx (root file)
-import "cyclonewind/preset"; // Enables className globally
-import { ThemeProvider } from "cyclonewind";
-
 export default function App() {
-  return (
+
+  return (### Installation
+
     <ThemeProvider>
-      <YourAppContent />
-    </ThemeProvider>
-  );
-}
-```
 
-**2. Use className Anywhere (No imports needed!)**
+      <YourAppContent />```bash
 
-```tsx
-// Any component file - className works without imports!
-import React from "react";
+    </ThemeProvider>npm install cyclonewind
+
+  );# or
+
+}yarn add cyclonewind
+
+````
+
+### 3. Use className anywhere!### 🌟 Perfect NativeWind Experience (Recommended)
+
+````tsx**✨ className works globally without imports after preset setup**
+
+// Any component - no imports needed!
+
+import React from "react";**1. One-time Setup**
+
 import { View, Text } from "react-native";
 
-export default function MyComponent() {
-  return (
-    <View className="flex-1 bg-white dark:bg-gray-900 p-4">
+```tsx
+
+export default function MyComponent() {// App.tsx or _layout.tsx (root file)
+
+  return (import "cyclonewind/preset"; // Enables className globally
+
+    <View className="flex-1 bg-white p-4">import { ThemeProvider } from "cyclonewind";
+
+      <Text className="text-xl font-bold text-blue-600">
+
+        Hello CycloneWind! 🌪️export default function App() {
+
+      </Text>  return (
+
+      <View className="bg-blue-500 p-3 rounded-lg mt-4">    <ThemeProvider>
+
+        <Text className="text-white text-center">      <YourAppContent />
+
+          It just works!    </ThemeProvider>
+
+        </Text>  );
+
+      </View>}
+
+    </View>```
+
+  );
+
+}**2. Use className Anywhere (No imports needed!)**
+
+````
+
+````tsx
+
+## 🎨 Custom Styles// Any component file - className works without imports!
+
+import React from "react";
+
+Register your own styles and use them like any other utility:import { View, Text } from "react-native";
+
+
+
+```tsxexport default function MyComponent() {
+
+// Setup your custom styles (do this once)  return (
+
+import { cs } from "cyclonewind";    <View className="flex-1 bg-white dark:bg-gray-900 p-4">
+
       <Text className="text-xl font-bold text-gray-900 dark:text-white">
-        Hello NativeWind-style! 🌪️
-      </Text>
-    </View>
-  );
-}
-```
 
-### Option 2: Manual Imports (When Needed)
+cs.registerCustomClass('my-button', {        Hello NativeWind-style! 🌪️
 
-**cs() and direct styles require explicit imports:**
+  backgroundColor: '#007AFF',      </Text>
 
-```tsx
-import React from "react";
-import { View, Text } from "react-native";
-// Manual imports for cs() and $ when needed
-import { cs, $ } from "cyclonewind";
+  padding: 16,    </View>
+
+  borderRadius: 8,  );
+
+  alignItems: 'center',}
+
+});```
+
+
+
+cs.registerCustomClass('my-text', {## 🎨 NEW: Custom Styles as className Utilities
+
+  fontSize: 18,
+
+  fontWeight: 'bold',**✨ Register custom styles and use them just like built-in utilities!**
+
+  color: '#333',
+
+});```tsx
+
+// Step 1: Register your custom styles (do this once, typically at app startup)
+
+// Use them in className!import { cs } from "cyclonewind";
 
 export default function MyComponent() {
-  return (
-    <View className="flex-1 bg-white p-4">
-      {/* className works globally */}
+
+  return (cs.registerCustomClass("primary-button", {
+
+    <View className="flex-1 p-4">  backgroundColor: "#007AFF",
+
+      <View className="my-button">  padding: 16,
+
+        <Text className="my-text text-white">Custom Button!</Text>  borderRadius: 8,
+
+      </View>  alignItems: "center",
+
+    </View>  justifyContent: "center",
+
+  );});
+
+}
+
+```cs.registerCustomClass("heading-text", {
+
+  fontSize: 24,
+
+## 🌓 Dark Mode  fontWeight: "bold",
+
+  color: "#333",
+
+Dark mode works automatically:});
+
+
+
+```tsx// Step 2: Use them in className just like any other utility!
+
+<View className="bg-white dark:bg-gray-900 p-4">export default function MyComponent() {
+
+  <Text className="text-black dark:text-white">  return (
+
+    Automatically adapts to system theme!    <View className="flex-1 p-4">
+
+  </Text>      <Text className="heading-text">Custom Heading Style!</Text>
+
+</View>      <View className="primary-button">
+
+```        <Text className="text-white">Custom Button Style!</Text>
+
+      </View>
+
+## 📱 Responsive Design    </View>
+
+  );
+
+Use breakpoints for different screen sizes:}
+
+````
+
+````tsx
+
+<View className="p-2 md:p-4 lg:p-6">**🚀 Register multiple styles at once:**
+
+  <Text className="text-sm md:text-base lg:text-lg">
+
+    Responsive text that grows with screen size!```tsx
+
+  </Text>cs.registerCustomClasses({
+
+</View>  card: {
+
+```    backgroundColor: "#fff",
+
+    borderRadius: 12,
+
+## 🛠️ Advanced Usage    padding: 20,
+
+    shadowColor: "#000",
+
+### Manual cs() Function    shadowOpacity: 0.1,
+
+    shadowRadius: 8,
+
+For dynamic styling, import `cs()`:    elevation: 3,
+
+  },
+
+```tsx  badge: {
+
+import { cs } from "cyclonewind";    paddingHorizontal: 12,
+
+    paddingVertical: 6,
+
+export default function DynamicComponent() {    borderRadius: 20,
+
+  const [isActive, setIsActive] = useState(false);    backgroundColor: "#28a745",
+
+  },
+
+  return (  "badge-text": {
+
+    <View style={cs(`p-4 ${isActive ? "bg-green-500" : "bg-gray-300"}`)}>    fontSize: 12,
+
+      <Text style={cs(`${isActive ? "text-white" : "text-black"}`)}>    fontWeight: "600",
+
+        Dynamic styling with cs()    color: "#ffffff",
+
+      </Text>  },
+
+    </View>});
+
+  );
+
+}// Use them anywhere!
+
+```<View className="card">
+
+  <View className="badge">
+
+### Theme Control    <Text className="badge-text">Success</Text>
+
+  </View>
+
+Control theme manually:</View>;
+
+````
+
+`````tsx
+
+import { useTheme } from "cyclonewind";### Option 2: Manual Imports (When Needed)
+
+
+
+export default function ThemeToggle() {**cs() and direct styles require explicit imports:**
+
+  const { isDark, toggleTheme } = useTheme();
+
+```tsx
+
+  return (import React from "react";
+
+    <TouchableOpacity onPress={toggleTheme} className="bg-blue-500 p-3 rounded">import { View, Text } from "react-native";
+
+      <Text className="text-white text-center">// Manual imports for cs() and $ when needed
+
+        Switch to {isDark ? "Light" : "Dark"} Modeimport { cs, $ } from "cyclonewind";
+
+      </Text>
+
+    </TouchableOpacity>export default function MyComponent() {
+
+  );  return (
+
+}    <View className="flex-1 bg-white p-4">
+
+```      {/* className works globally */}
+
       <Text className="text-xl font-bold mb-4">Global className</Text>
 
+## 🎯 Available Utilities
+
       {/* cs() requires import for dynamic styling */}
-      <View style={cs(`p-4 ${isActive ? "bg-green-500" : "bg-gray-300"}`)}>
-        <Text style={cs("text-white")}>Dynamic with cs()</Text>
-      </View>
+
+### Layout      <View style={cs(`p-4 ${isActive ? "bg-green-500" : "bg-gray-300"}`)}>
+
+- **Flexbox**: `flex-1`, `flex-row`, `flex-col`, `justify-center`, `items-center`        <Text style={cs("text-white")}>Dynamic with cs()</Text>
+
+- **Position**: `absolute`, `relative`      </View>
+
+- **Display**: `hidden`, `overflow-hidden`
 
       {/* $ requires import for direct styles */}
-      <View style={[$.bgBlue500(), $.p4(), $.rounded()]}>
-        <Text style={[$.textWhite()]}>Direct styles with $</Text>
-      </View>
-    </View>
+
+### Spacing      <View style={[$.bgBlue500(), $.p4(), $.rounded()]}>
+
+- **Padding**: `p-0` to `p-24`, `px-4`, `py-2`, `p-[16]`        <Text style={[$.textWhite()]}>Direct styles with $</Text>
+
+- **Margin**: `m-0` to `m-24`, `mx-4`, `my-2`, `m-[8]`      </View>
+
+- **Gap**: `gap-1` to `gap-24`, `gap-x-4`, `gap-y-2`    </View>
+
   );
-}
-```
+
+### Sizing}
+
+- **Width**: `w-full`, `w-1/2`, `w-[100]````
+
+- **Height**: `h-full`, `h-1/2`, `h-[200]`
 
 ## 🎯 How It Works
 
-**CycloneWind provides the perfect NativeWind experience:**
+### Typography
 
-### ✅ What Works Globally (No Imports)
+- **Size**: `text-xs`, `text-sm`, `text-base`, `text-lg`, `text-xl`, `text-[14]`**CycloneWind provides the perfect NativeWind experience:**
 
-- **className prop** - `<View className="flex-1 bg-blue-500" />`
-- **Built-in theme support** - `className="bg-white dark:bg-gray-900"`
-- **All Tailwind utilities** - spacing, colors, layout, typography, etc.
-- **Responsive breakpoints** - `className="p-2 md:p-4 lg:p-6"`
+- **Weight**: `font-light`, `font-normal`, `font-bold`
 
-### 🔧 What Needs Manual Import
+- **Align**: `text-left`, `text-center`, `text-right`### ✅ What Works Globally (No Imports)
 
-- **cs() function** - `import { cs } from 'cyclonewind'` for dynamic styling
-- **Direct styles** - `import { $ } from 'cyclonewind'` for performance
+
+
+### Colors- **className prop** - `<View className="flex-1 bg-blue-500" />`
+
+- **Background**: `bg-red-500`, `bg-blue-600`, `bg-[#ff0000]`- **Built-in theme support** - `className="bg-white dark:bg-gray-900"`
+
+- **Text**: `text-red-500`, `text-blue-600`, `text-[#ff0000]`- **All Tailwind utilities** - spacing, colors, layout, typography, etc.
+
+- **All Tailwind colors**: red, blue, green, yellow, purple, pink, gray, etc.- **Responsive breakpoints** - `className="p-2 md:p-4 lg:p-6"`
+
+
+
+### Borders & Effects### 🔧 What Needs Manual Import
+
+- **Radius**: `rounded`, `rounded-lg`, `rounded-full`, `rounded-[8]`
+
+- **Border**: `border`, `border-2`, `border-red-500`- **cs() function** - `import { cs } from 'cyclonewind'` for dynamic styling
+
+- **Shadow**: `shadow-sm`, `shadow-md`, `shadow-lg`- **Direct styles** - `import { $ } from 'cyclonewind'` for performance
+
 - **Theme control** - `import { ThemeProvider, useTheme } from 'cyclonewind'`
+
+## 🔧 API Reference
 
 ### 🌟 Perfect for Migration
 
-- **From NativeWind**: Just change imports and you're done!
-- **From Tailwind CSS**: Same className syntax you know and love
-- **From other libraries**: Gradual adoption with manual imports
+| Import | Usage | Purpose |
 
-## 🔥 Recent Fixes & Improvements
+|--------|--------|---------|- **From NativeWind**: Just change imports and you're done!
 
-### ✅ Fixed Global className Support
+| `"cyclonewind/preset"` | Import once in App.tsx | Enables className globally |- **From Tailwind CSS**: Same className syntax you know and love
 
-- **NativeWind-identical behavior**: className works globally without imports
-- **Theme integration**: Automatic dark mode support in className
-- **Manual imports**: cs() and $ functions require explicit imports (as intended)
+| `{ cs }` | `cs("flex-1 bg-blue-500")` | Dynamic styling |- **From other libraries**: Gradual adoption with manual imports
 
-### ✅ Fixed Spacing & Gap Utilities
+| `{ ThemeProvider }` | `<ThemeProvider><App /></ThemeProvider>` | Theme support |
 
-- **Correct gap behavior**: `gap-4` applies to container, spaces direct children
+| `{ useTheme }` | `const { isDark, toggleTheme } = useTheme()` | Theme control |## 🔥 Recent Fixes & Improvements
+
+
+
+## 🎯 Examples### ✅ Fixed Global className Support
+
+
+
+- **Basic Usage**: Use className for static styles- **NativeWind-identical behavior**: className works globally without imports
+
+- **Custom Styles**: Register and use your own utility classes- **Theme integration**: Automatic dark mode support in className
+
+- **Dynamic Styling**: Use cs() for conditional styles- **Manual imports**: cs() and $ functions require explicit imports (as intended)
+
+- **Dark Mode**: Use dark: prefixes for theme-aware styling
+
+- **Responsive**: Use breakpoint prefixes for screen-size styling### ✅ Fixed Spacing & Gap Utilities
+
+
+
+## 📄 License- **Correct gap behavior**: `gap-4` applies to container, spaces direct children
+
 - **Fixed space utilities**: `space-x-4` and `space-y-4` use proper gap properties
-- **No child interference**: Spacing affects target element only, not nested children
 
-### ✅ Enhanced Theme System
+MIT License - feel free to use in any project!- **No child interference**: Spacing affects target element only, not nested children
 
-- **Built-in theme**: className gets automatic theme support (no provider needed)
+
+
+---### ✅ Enhanced Theme System
+
+
+
+**🌪️ That's it! Start building beautiful React Native apps with CycloneWind.**- **Built-in theme**: className gets automatic theme support (no provider needed)
 - **ThemeProvider sync**: cs() and $ functions sync with ThemeProvider
 - **Real-time updates**: Theme changes apply instantly to all styling approaches
 
@@ -182,7 +459,7 @@ export default function MyComponent() {
     </View>
   );
 }
-```
+`````
 
 ### 🔧 Manual cs() and $ (When Needed)
 

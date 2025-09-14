@@ -2,6 +2,48 @@
 
 All notable changes to Cyclone Styles will be documented in this file.
 
+## [0.0.3] - 2025-09-14
+
+### 🎨 Major Feature: Custom Styles as className Utilities
+
+- **Custom className Integration**: Register custom styles and use them directly in className prop
+- **New Registration API**: Added `cs.registerCustomClass()` and `cs.registerCustomClasses()` functions
+- **Seamless Integration**: Custom styles work exactly like built-in Tailwind utilities
+- **Global Usage**: Once registered, custom styles work in any component using className
+
+### 🌟 Enhanced className Experience
+
+- **Perfect NativeWind Compatibility**: className prop works globally without imports
+- **Built-in Theme Support**: Automatic dark mode support in className
+- **Fixed Global System**: className transformer works independently with enhanced detection
+
+### 📚 Complete Documentation Overhaul
+
+- **Simple README**: Clean, easy-to-understand documentation focused on practical usage
+- **Essential Examples**: 3 focused examples (Basic, Custom Styles, Dynamic Styling)
+- **Quick Setup Guide**: 3-minute setup guide for immediate productivity
+- **Removed Complexity**: Eliminated overwhelming technical documentation
+
+### 🛠️ Technical Improvements
+
+- **Enhanced Custom Styles System**: Comprehensive framework for creating and combining styles
+- **Better TypeScript Support**: Full type safety for custom style registration
+- **Improved Build System**: Clean compilation and exports
+
+### 🔧 API Additions
+
+- `cs.registerCustomClass(name, styles)`: Register a single custom class
+- `cs.registerCustomClasses(object)`: Register multiple custom classes at once
+- `cs.getCustomClass(name)`: Retrieve a registered custom class
+- `cs.getAllCustomClasses()`: Get all registered custom classes
+
+### 📦 Package Updates
+
+- Updated to version 0.0.3
+- Simplified file structure
+- Clean documentation and examples
+- Ready for production use
+
 ## [1.1.3] - 2025-01-14
 
 ### ✨ New Features

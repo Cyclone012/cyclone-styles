@@ -10,6 +10,7 @@ import { Appearance, ColorSchemeName, Dimensions } from "react-native";
 // Import the setThemeContext function from cs.ts and className theme sync
 import { setThemeContext } from "./cs";
 import { updateClassNameTheme } from "./className";
+import { setGlobalTheme } from "./preset";
 
 // Simple storage interface for theme persistence
 const storage = {
@@ -221,6 +222,7 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({
   useEffect(() => {
     setThemeContext({ isDark });
     updateClassNameTheme(isDark); // Also sync className system
+    setGlobalTheme(isDark); // Sync global theme state
   }, [isDark]);
 
   // Toggle between light and dark (skip system)
@@ -238,3 +240,21 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({
 
   return React.createElement(ThemeContext.Provider, { value }, children);
 };
+
+// Default export for the theme module
+const themeModule = {
+  ThemeProvider,
+  useTheme,
+  useResponsive,
+  getThemeColor,
+  getScreenWidth,
+  getScreenHeight,
+  isSmallScreen,
+  isMediumScreen,
+  isLargeScreen,
+  breakpoints,
+  getCurrentBreakpoint,
+  matchesBreakpoint,
+};
+
+export default themeModule;

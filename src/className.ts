@@ -174,7 +174,7 @@ function handleSpecialColorCase(className: string): Style | null {
 /**
  * Update theme state (called by global theme system)
  */
-export function updateClassNameTheme(isDark: boolean) {
+function updateClassNameTheme(isDark: boolean) {
   globalThemeState.isDark = isDark;
   classNameStyleCache.clear(); // Clear cache when theme changes
 }
@@ -190,6 +190,7 @@ type ClassNameProps = {
 
 // Components that support className transformation
 const SUPPORTED_COMPONENTS = new Set([
+  // React Native Core Components
   "View",
   "Text",
   "Image",
@@ -210,6 +211,21 @@ const SUPPORTED_COMPONENTS = new Set([
   "KeyboardAvoidingView",
   "RefreshControl",
   "ImageBackground",
+
+  // Expo Router Components (though these are usually function components)
+  "Stack",
+  "Slot",
+  "Tabs",
+  "Drawer",
+  "Link",
+
+  // Common custom component names
+  "Screen",
+  "Container",
+  "Card",
+  "Button",
+  "Header",
+  "Footer",
 ]);
 
 // Transform className to style
@@ -242,21 +258,23 @@ function createElementWithClassName(
   props: ClassNameProps | null,
   ...children: React.ReactNode[]
 ) {
-  // Only transform if it's a supported component and has className
-  if (
-    props &&
-    typeof type === "string" &&
-    SUPPORTED_COMPONENTS.has(type) &&
-    props.className
-  ) {
-    const transformedProps = transformClassNameToStyle(props);
-    return originalCreateElement(type, transformedProps, ...children);
-  }
+  // Transform className if present
+  if (props && props.className) {
+    // Check if it's a supported React Native component
+    const isSupportedStringComponent =
+      typeof type === "string" && SUPPORTED_COMPONENTS.has(type);
 
-  // For custom components, check if they accept className
-  if (props && typeof type === "function" && props.className) {
-    const transformedProps = transformClassNameToStyle(props);
-    return originalCreateElement(type, transformedProps, ...children);
+    // Check if it's a function component (includes Expo Router, custom components)
+    const isFunctionComponent = typeof type === "function";
+
+    // Check if it's a component that likely accepts style prop (heuristic)
+    const isStyleComponent =
+      typeof type === "object" && type && (type.displayName || type.name);
+
+    if (isSupportedStringComponent || isFunctionComponent || isStyleComponent) {
+      const transformedProps = transformClassNameToStyle(props);
+      return originalCreateElement(type, transformedProps, ...children);
+    }
   }
 
   // Default behavior for everything else
@@ -280,16 +298,49 @@ export function setupClassNameTransformer() {
     if (jsxRuntime && jsxRuntime.jsx) {
       const originalJsx = jsxRuntime.jsx;
       jsxRuntime.jsx = (type: any, props: any, key?: any) => {
-        if (
-          props &&
-          typeof type === "string" &&
-          SUPPORTED_COMPONENTS.has(type) &&
-          props.className
-        ) {
-          const transformedProps = transformClassNameToStyle(props);
-          return originalJsx(type, transformedProps, key);
+        // Transform className for any component that has it
+        if (props && props.className) {
+          const isSupportedStringComponent =
+            typeof type === "string" && SUPPORTED_COMPONENTS.has(type);
+          const isFunctionComponent = typeof type === "function";
+          const isStyleComponent =
+            typeof type === "object" && type && (type.displayName || type.name);
+
+          if (
+            isSupportedStringComponent ||
+            isFunctionComponent ||
+            isStyleComponent
+          ) {
+            const transformedProps = transformClassNameToStyle(props);
+            return originalJsx(type, transformedProps, key);
+          }
         }
         return originalJsx(type, props, key);
+      };
+    }
+
+    // Also handle jsxs for fragments and multiple children
+    if (jsxRuntime && jsxRuntime.jsxs) {
+      const originalJsxs = jsxRuntime.jsxs;
+      jsxRuntime.jsxs = (type: any, props: any, key?: any) => {
+        // Transform className for any component that has it
+        if (props && props.className) {
+          const isSupportedStringComponent =
+            typeof type === "string" && SUPPORTED_COMPONENTS.has(type);
+          const isFunctionComponent = typeof type === "function";
+          const isStyleComponent =
+            typeof type === "object" && type && (type.displayName || type.name);
+
+          if (
+            isSupportedStringComponent ||
+            isFunctionComponent ||
+            isStyleComponent
+          ) {
+            const transformedProps = transformClassNameToStyle(props);
+            return originalJsxs(type, transformedProps, key);
+          }
+        }
+        return originalJsxs(type, props, key);
       };
     }
   } catch (error) {
@@ -382,7 +433,11 @@ declare module "react-native" {
   }
 }
 
+export { convertClassNameToStyle, updateClassNameTheme };
+
 export default {
   setupClassNameTransformer,
   resetClassNameTransformer,
+  convertClassNameToStyle,
+  updateClassNameTheme,
 };
