@@ -1,7 +1,7 @@
-# 🌪️ Cyclone Styles
+# 🌪️ CycloneWind
 
-[![npm version](https://img.shields.io/npm/v/cyclone-styles.svg?style=flat-square)](https://www.npmjs.com/package/cyclone-styles)
-[![npm downloads](https://img.shields.io/npm/dm/cyclone-styles.svg?style=flat-square)](https://www.npmjs.com/package/cyclone-styles)
+[![npm version](https://img.shields.io/npm/v/cyclonewind.svg?style=flat-square)](https://www.npmjs.com/package/cyclonewind)
+[![npm downloads](https://img.shields.io/npm/dm/cyclonewind.svg?style=flat-square)](https://www.npmjs.com/package/cyclonewind)
 [![TypeScript](https://img.shields.io/badge/TypeScript-Ready-blue.svg?style=flat-square)](https://www.typescriptlang.org/)
 [![React Native](https://img.shields.io/badge/React%20Native-Ready-green.svg?style=flat-square)](https://reactnative.dev/)
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](LICENSE)
@@ -31,9 +31,9 @@ A complete, pure React Native implementation of Tailwind CSS utilities with Nati
 ### Installation
 
 ```bash
-npm install cyclone-styles
+npm install cyclonewind
 # or
-yarn add cyclone-styles
+yarn add cyclonewind
 ```
 
 ### Option 1: Global Setup (Recommended - NativeWind Style)
@@ -44,8 +44,8 @@ Set up once in your root layout and use everywhere:
 
 ```tsx
 // App.tsx or _layout.tsx (root file)
-import "cyclone-styles/preset"; // This sets up everything globally
-import { ThemeProvider } from "cyclone-styles";
+import "cyclonewind/preset"; // This sets up everything globally
+import { ThemeProvider } from "cyclonewind";
 
 export default function App() {
   return (
@@ -81,13 +81,13 @@ If you prefer manual imports:
 ```tsx
 import React from "react";
 import { View, Text, Image } from "react-native";
-import { cs, ThemeProvider } from "cyclone-styles";
+import { cs, ThemeProvider } from "cyclonewind";
 
 function MyApp() {
   return (
     <View style={cs("flex-1 bg-white dark:bg-gray-900 p-4")}>
       <Text style={cs("text-xl font-bold text-gray-900 dark:text-white")}>
-        Hello Cyclone Styles! 🌪️
+        Hello CycloneWind! 🌪️
       </Text>
 
       {/* ✨ NEW: cs() works with all components without specifying type */}
@@ -141,7 +141,7 @@ export default function MyComponent() {
 ```tsx
 import React from "react";
 import { View, Text, Pressable } from "react-native";
-import { cs } from "cyclone-styles";
+import { cs } from "cyclonewind";
 
 export default function MyComponent() {
   const [isActive, setIsActive] = React.useState(false);
@@ -182,7 +182,7 @@ For even better performance and a more CSS-modules-like experience, use pre-comp
 ### $ Shorthand API (Recommended)
 
 ```tsx
-import { $ } from "cyclone-styles";
+import { $ } from "cyclonewind";
 
 export default function MyComponent() {
   return (
@@ -202,11 +202,7 @@ export default function MyComponent() {
 ### Category-based Style Objects
 
 ```tsx
-import {
-  getLayoutStyles,
-  getSpacingStyles,
-  getColorStyles,
-} from "cyclone-styles";
+import { getLayoutStyles, getSpacingStyles, getColorStyles } from "cyclonewind";
 
 export default function MyComponent() {
   const layout = getLayoutStyles();
@@ -237,7 +233,7 @@ Customize colors, spacing, and fonts like NativeWind:
 
 ```tsx
 // App.tsx or _layout.tsx
-import { setupCycloneStyles } from "cyclone-styles/global";
+import { setupCycloneStyles } from "cyclonewind/global";
 
 setupCycloneStyles({
   theme: {
@@ -275,7 +271,7 @@ setupCycloneStyles({
 Add your own utilities:
 
 ```tsx
-import { addUtilities } from "cyclone-styles/global";
+import { addUtilities } from "cyclonewind/global";
 
 addUtilities({
   ".btn-primary": {
@@ -299,8 +295,8 @@ addUtilities({
 
 ```tsx
 // App.tsx - Setup once
-import "cyclone-styles/preset";
-import { ThemeProvider, setupCycloneStyles } from "cyclone-styles";
+import "cyclonewind/preset";
+import { ThemeProvider, setupCycloneStyles } from "cyclonewind";
 
 // Optional: Customize theme
 setupCycloneStyles({
@@ -377,7 +373,7 @@ Mobile-first responsive breakpoints work seamlessly:
 ### Manual Theme Control
 
 ```tsx
-import { useTheme } from "cyclone-styles";
+import { useTheme } from "cyclonewind";
 
 function ThemeToggle() {
   const { isDark, toggleTheme, setTheme } = useTheme();
@@ -515,7 +511,7 @@ Use custom values with bracket notation - all numbers default to pixels:
 
 ## 🆚 Comparison
 
-| Feature              | Cyclone Styles   | NativeWind        | Tailwind RN |
+| Feature              | CycloneWind      | NativeWind        | Tailwind RN |
 | -------------------- | ---------------- | ----------------- | ----------- |
 | **Utilities**        | ✅ 8,220+        | ✅ Most           | ⚠️ Limited  |
 | **Global Setup**     | ✅ Built-in      | ✅ Yes            | ❌ No       |
@@ -529,7 +525,7 @@ Use custom values with bracket notation - all numbers default to pixels:
 
 ## 🔄 Migration from NativeWind
 
-Cyclone Styles is 100% compatible with NativeWind! Migrate easily:
+CycloneWind is 100% compatible with NativeWind! Migrate easily:
 
 **Before (NativeWind):**
 
@@ -539,18 +535,18 @@ Cyclone Styles is 100% compatible with NativeWind! Migrate easily:
 </View>
 ```
 
-**After (Cyclone Styles):**
+**After (CycloneWind):**
 
 ```tsx
 // Option 1: Global setup (recommended)
-import "cyclone-styles/preset"; // Once in root
+import "cyclonewind/preset"; // Once in root
 
 <View style={cs("flex-1 bg-white p-4")}>
   <Text style={cs("text-lg font-bold")}>Hello</Text>
 </View>;
 
 // Option 2: Manual import
-import { cs } from "cyclone-styles";
+import { cs } from "cyclonewind";
 
 <View style={cs("flex-1 bg-white p-4")}>
   <Text style={cs("text-lg font-bold")}>Hello</Text>
@@ -562,15 +558,15 @@ import { cs } from "cyclone-styles";
 ### Basic Setup
 
 ```bash
-npm install cyclone-styles
+npm install cyclonewind
 ```
 
 ### Global Setup (Recommended)
 
 ```tsx
 // App.tsx or your root layout file
-import "cyclone-styles/preset"; // This makes cs() available globally
-import { ThemeProvider } from "cyclone-styles";
+import "cyclonewind/preset"; // This makes cs() available globally
+import { ThemeProvider } from "cyclonewind";
 
 export default function App() {
   return (
@@ -585,8 +581,8 @@ export default function App() {
 
 ```tsx
 // App.tsx
-import { setupCycloneStyles, ThemeProvider } from "cyclone-styles";
-import "cyclone-styles/preset";
+import { setupCycloneStyles, ThemeProvider } from "cyclonewind";
+import "cyclonewind/preset";
 
 // Customize your theme
 setupCycloneStyles({
@@ -629,8 +625,8 @@ We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) f
 ### Development Setup
 
 ```bash
-git clone https://github.com/Cyclone012/cyclone-styles.git
-cd cyclone-styles
+git clone https://github.com/Cyclone012/cyclonewind.git
+cd cyclonewind
 npm install
 npm run build
 ```
@@ -647,8 +643,8 @@ MIT License - see [LICENSE](LICENSE) file for details.
 
 ## 📞 Support
 
-- 🐛 **Bug Reports**: [GitHub Issues](https://github.com/Cyclone012/cyclone-styles/issues)
-- 💬 **Discussions**: [GitHub Discussions](https://github.com/Cyclone012/cyclone-styles/discussions)
+- 🐛 **Bug Reports**: [GitHub Issues](https://github.com/Cyclone012/cyclonewind/issues)
+- 💬 **Discussions**: [GitHub Discussions](https://github.com/Cyclone012/cyclonewind/discussions)
 - 📧 **Email**: cyclone@example.com
 
 ---
@@ -657,6 +653,6 @@ MIT License - see [LICENSE](LICENSE) file for details.
 
 **🌪️ Made with ❤️ for the React Native community**
 
-[⭐ Star on GitHub](https://github.com/Cyclone012/cyclone-styles) • [📦 View on npm](https://www.npmjs.com/package/cyclone-styles) • [📚 Documentation](docs/)
+[⭐ Star on GitHub](https://github.com/Cyclone012/cyclonewind) • [📦 View on npm](https://www.npmjs.com/package/cyclonewind) • [📚 Documentation](docs/)
 
 </div>
