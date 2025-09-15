@@ -26,7 +26,8 @@ interface ThemeContext {
 }
 
 // Global theme state (can be set by theme provider)
-let globalThemeContext: ThemeContext = { isDark: false };
+// Use var to avoid Temporal Dead Zone issues across circular imports
+var globalThemeContext: ThemeContext = { isDark: false };
 
 /**
  * Set the global theme context for cs() function
@@ -36,6 +37,11 @@ export function setThemeContext(context: ThemeContext) {
   globalThemeContext = context;
   // Clear cache when theme changes
   styleCache.clear();
+}
+
+// Safe accessor to avoid undefined in edge cases
+export function getThemeContext(): ThemeContext {
+  return globalThemeContext || { isDark: false };
 }
 
 // Function overloads for better TypeScript support

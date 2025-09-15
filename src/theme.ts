@@ -7,10 +7,9 @@ import React, {
 } from "react";
 import { Appearance, ColorSchemeName, Dimensions } from "react-native";
 
-// Import the setThemeContext function from cs.ts and className theme sync
+// Import the setThemeContext function from cs.ts
 import { setThemeContext } from "./cs";
-import { updateClassNameTheme } from "./className";
-import { setGlobalTheme } from "./preset";
+// Removed preset import to avoid circular dependency with preset -> global -> theme
 
 // Simple storage interface for theme persistence
 const storage = {
@@ -218,11 +217,9 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({
   const isDark =
     mode === "dark" || (mode === "system" && systemColorScheme === "dark");
 
-  // Update the global theme context for cs() function and className system
+  // Update the global theme context for cs() function
   useEffect(() => {
     setThemeContext({ isDark });
-    updateClassNameTheme(isDark); // Also sync className system
-    setGlobalTheme(isDark); // Sync global theme state
   }, [isDark]);
 
   // Toggle between light and dark (skip system)

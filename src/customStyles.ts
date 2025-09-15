@@ -481,4 +481,7 @@ export default {
   configureStyles,
   getStyleConfig,
   createConfiguredStyle,
+
+  // Core cs function
+  cs,
 };

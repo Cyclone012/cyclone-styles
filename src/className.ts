@@ -1,473 +1,332 @@
-/**
- * React Native className support - Works with standard RN components
- * Patches React.createElement to automatically convert className to style
- * Use with standard React Native components: View, Text, SafeAreaView, etc.
- */
-
 import React from "react";
 import { StyleSheet, ViewStyle, TextStyle, ImageStyle } from "react-native";
-import { styles } from "./styles";
-import { getConfig, getFlattenedColors } from "./config";
+import { cs } from "./cs";
 
-// Type for any React Native style
 type Style = ViewStyle | TextStyle | ImageStyle;
 
-// Cache for converted className styles
-const classNameStyleCache = new Map<string, Style>();
-
-// Store for custom registered classes
+const cache = new Map<string, Style>();
 const customClasses: Record<string, Style> = {};
 
-// Global theme state (shared with cs function)
-let globalThemeState = { isDark: false };
+export function vars(variables: Record<string, string | number>) {
+  // CSS variables support
+  cache.clear();
+}
 
-/**
- * Register a custom class that can be used in className
- */
 export function registerCustomClass(name: string, styleObject: Style) {
   customClasses[name] = styleObject;
+  cache.clear();
 }
 
-/**
- * Register multiple custom classes at once
- */
 export function registerCustomClasses(classMap: Record<string, Style>) {
   Object.assign(customClasses, classMap);
+  cache.clear();
 }
 
-/**
- * Convert className string to React Native style
- * This works with all standard React Native components
- */
 function convertClassNameToStyle(className: string): Style {
   if (!className || typeof className !== "string") {
     return {};
   }
 
-  // Check cache first
-  const cacheKey = `${className}_dark:${globalThemeState.isDark}`;
-  if (classNameStyleCache.has(cacheKey)) {
-    return classNameStyleCache.get(cacheKey)!;
+  if (cache.has(className)) {
+    return cache.get(className)!;
   }
 
-  // Split class names and process each one
   const classes = className.split(/\s+/).filter((c) => c.length > 0);
   const resolvedStyles: Style[] = [];
 
   for (const cls of classes) {
-    // Check custom classes first
     if (customClasses[cls]) {
       resolvedStyles.push(customClasses[cls]);
       continue;
     }
 
-    // Handle dark mode prefixes
-    const isDarkClass = cls.startsWith("dark:");
-    if (isDarkClass && !globalThemeState.isDark) {
-      continue; // Skip dark classes when not in dark mode
-    }
-    if (isDarkClass && globalThemeState.isDark) {
-      // Process without dark: prefix
-      const classWithoutDark = cls.replace("dark:", "");
-
-      // Check custom classes first for dark mode
-      if (customClasses[classWithoutDark]) {
-        resolvedStyles.push(customClasses[classWithoutDark]);
-        continue;
+    try {
+      const style = cs(cls);
+      if (style && Object.keys(style).length > 0) {
+        resolvedStyles.push(style);
       }
-
-      const style = getStyleForClassName(classWithoutDark);
-      if (style) resolvedStyles.push(style);
-      continue;
-    }
-
-    // Handle regular classes
-    const style = getStyleForClassName(cls);
-    if (style) {
-      resolvedStyles.push(style);
+    } catch (error) {
+      console.warn(`Invalid className: ${cls}`);
     }
   }
 
-  // Flatten styles
   const flattenedStyle = StyleSheet.flatten(resolvedStyles);
-
-  // Cache result
-  classNameStyleCache.set(cacheKey, flattenedStyle);
-
+  cache.set(className, flattenedStyle);
   return flattenedStyle;
 }
 
-/**
- * Get style for a single class name
- */
-function getStyleForClassName(className: string): Style | null {
-  // Handle arbitrary values (e.g., h-[32], bg-[#ff0000])
-  if (className.includes("[") && className.includes("]")) {
-    return handleArbitraryValue(className);
-  }
-
-  // Check built-in styles first
-  if (styles[className as keyof typeof styles]) {
-    return styles[className as keyof typeof styles] as Style;
-  }
-
-  // Convert kebab-case to camelCase for style lookup
-  const styleKey = convertToStyleKey(className);
-  if (styles[styleKey as keyof typeof styles]) {
-    return styles[styleKey as keyof typeof styles] as Style;
-  }
-
-  // Handle special color cases
-  return handleSpecialColorCase(className);
-}
-
-/**
- * Handle arbitrary values like h-[32], bg-[#ff0000], etc.
- */
-function handleArbitraryValue(className: string): Style | null {
-  const match = className.match(/^(.+?)-\[(.+?)\]$/);
-  if (!match) return null;
-
-  const [, prefix, value] = match;
-
-  // Handle different types of arbitrary values
-  switch (prefix) {
-    case "w":
-      return { width: parseArbitraryValue(value) };
-    case "h":
-      return { height: parseArbitraryValue(value) };
-    case "p":
-      return { padding: parseArbitraryValue(value) };
-    case "m":
-      return { margin: parseArbitraryValue(value) };
-    case "bg":
-      return { backgroundColor: value };
-    case "text":
-      if (value.startsWith("#") || value.startsWith("rgb")) {
-        return { color: value };
-      }
-      return { fontSize: parseArbitraryValue(value) };
-    // Add more as needed
-    default:
-      return null;
-  }
-}
-
-/**
- * Parse arbitrary value to number (defaults to pixels)
- */
-function parseArbitraryValue(value: string): number {
-  const num = parseInt(value, 10);
-  return isNaN(num) ? 0 : num;
-}
-
-/**
- * Convert kebab-case to camelCase
- */
-function convertToStyleKey(className: string): string {
-  return className.replace(/-([a-z])/g, (_, letter) => letter.toUpperCase());
-}
-
-/**
- * Handle special color cases like text-blue-500, bg-red-400
- */
-function handleSpecialColorCase(className: string): Style | null {
-  const colors = getFlattenedColors();
-
-  // Handle text colors (text-color-shade)
-  if (className.startsWith("text-")) {
-    const colorName = className.replace("text-", "");
-    if (colors[colorName]) {
-      return { color: colors[colorName] };
-    }
-  }
-
-  // Handle background colors (bg-color-shade)
-  if (className.startsWith("bg-")) {
-    const colorName = className.replace("bg-", "");
-    if (colors[colorName]) {
-      return { backgroundColor: colors[colorName] };
-    }
-  }
-
-  // Handle border colors (border-color-shade)
-  if (className.startsWith("border-") && !className.match(/border-\d/)) {
-    const colorName = className.replace("border-", "");
-    if (colors[colorName]) {
-      return { borderColor: colors[colorName] };
-    }
-  }
-
-  return null;
-}
-
-/**
- * Update theme state (called by global theme system)
- */
-function updateClassNameTheme(isDark: boolean) {
-  globalThemeState.isDark = isDark;
-  classNameStyleCache.clear(); // Clear cache when theme changes
-}
-
-// Store original createElement to wrap it
-const originalCreateElement = React.createElement;
-
-// Types for className support
-type ClassNameProps = {
-  className?: string;
-  style?: any;
-};
-
-// Components that support className transformation
-const SUPPORTED_COMPONENTS = new Set([
-  // React Native Core Components
-  "View",
-  "Text",
-  "Image",
-  "ScrollView",
-  "TouchableOpacity",
-  "TouchableHighlight",
-  "TouchableWithoutFeedback",
-  "Pressable",
-  "SafeAreaView",
-  "FlatList",
-  "SectionList",
-  "TextInput",
-  "Switch",
-  "Slider",
-  "ActivityIndicator",
-  "Modal",
-  "StatusBar",
-  "KeyboardAvoidingView",
-  "RefreshControl",
-  "ImageBackground",
-
-  // Expo Router Components (though these are usually function components)
-  "Stack",
-  "Slot",
-  "Tabs",
-  "Drawer",
-  "Link",
-
-  // Common custom component names
-  "Screen",
-  "Container",
-  "Card",
-  "Button",
-  "Header",
-  "Footer",
-]);
-
-// Transform className to style
 function transformClassNameToStyle(props: any) {
-  if (!props || !props.className) {
+  if (!props || (!props.className && !props.contentContainerClassName)) {
     return props;
   }
 
-  const { className, style, ...restProps } = props;
+  const {
+    className,
+    contentContainerClassName,
+    style,
+    contentContainerStyle,
+    ...restProps
+  } = props;
 
-  // Convert className to style using our standalone converter
-  const classNameStyle = convertClassNameToStyle(className);
+  let transformedProps = { ...restProps };
 
-  // Merge className style with existing style
-  const mergedStyle = style
-    ? Array.isArray(style)
-      ? [classNameStyle, ...style]
-      : [classNameStyle, style]
-    : classNameStyle;
-
-  return {
-    ...restProps,
-    style: mergedStyle,
-  };
-}
-
-// Enhanced createElement that supports className
-function createElementWithClassName(
-  type: any,
-  props: ClassNameProps | null,
-  ...children: React.ReactNode[]
-) {
-  // Transform className if present
-  if (props && props.className) {
-    // Check if it's a supported React Native component
-    const isSupportedStringComponent =
-      typeof type === "string" && SUPPORTED_COMPONENTS.has(type);
-
-    // Check if it's a function component (includes Expo Router, custom components)
-    const isFunctionComponent = typeof type === "function";
-
-    // Check if it's a component that likely accepts style prop (heuristic)
-    const isStyleComponent =
-      typeof type === "object" && type && (type.displayName || type.name);
-
-    if (isSupportedStringComponent || isFunctionComponent || isStyleComponent) {
-      const transformedProps = transformClassNameToStyle(props);
-      return originalCreateElement(type, transformedProps, ...children);
-    }
+  // Handle regular className
+  if (className) {
+    const classNameStyle = convertClassNameToStyle(className);
+    const mergedStyle = style
+      ? Array.isArray(style)
+        ? [classNameStyle, ...style]
+        : [classNameStyle, style]
+      : classNameStyle;
+    transformedProps.style = mergedStyle;
+  } else if (style) {
+    transformedProps.style = style;
   }
 
-  // Default behavior for everything else
+  // Handle contentContainerClassName for ScrollView, FlatList, etc.
+  if (contentContainerClassName) {
+    const contentClassNameStyle = convertClassNameToStyle(
+      contentContainerClassName
+    );
+    const mergedContentStyle = contentContainerStyle
+      ? Array.isArray(contentContainerStyle)
+        ? [contentClassNameStyle, ...contentContainerStyle]
+        : [contentClassNameStyle, contentContainerStyle]
+      : contentClassNameStyle;
+    transformedProps.contentContainerStyle = mergedContentStyle;
+  } else if (contentContainerStyle) {
+    transformedProps.contentContainerStyle = contentContainerStyle;
+  }
+
+  return transformedProps;
+}
+
+// Enhanced React.createElement patching
+const originalCreateElement = React.createElement;
+
+function createElementWithClassName(
+  type: any,
+  props: any,
+  ...children: React.ReactNode[]
+) {
+  if (props && (props.className || props.contentContainerClassName)) {
+    const transformedProps = transformClassNameToStyle(props);
+    return originalCreateElement(type, transformedProps, ...children);
+  }
   return originalCreateElement(type, props, ...children);
 }
 
-// Global className transformer setup
-export function setupClassNameTransformer() {
-  // Only setup once
-  if ((React as any).__cycloneClassNameSetup) {
-    return;
+// Direct React Native component patching
+function patchReactNativeComponents() {
+  try {
+    const ReactNative = require("react-native");
+
+    // List of components to patch
+    const componentsToPath = [
+      "View",
+      "Text",
+      "Image",
+      "ScrollView",
+      "SafeAreaView",
+      "TouchableOpacity",
+      "TouchableHighlight",
+      "TouchableWithoutFeedback",
+      "Pressable",
+      "FlatList",
+      "SectionList",
+      "VirtualizedList",
+      "TextInput",
+      "Switch",
+      "Slider",
+      "ActivityIndicator",
+      "KeyboardAvoidingView",
+      "RefreshControl",
+      "ImageBackground",
+    ];
+
+    componentsToPath.forEach((componentName) => {
+      const OriginalComponent = ReactNative[componentName];
+      if (OriginalComponent && !(OriginalComponent as any).__cyclonePatched) {
+        // Create wrapped component
+        const WrappedComponent = React.forwardRef((props: any, ref: any) => {
+          const transformedProps = transformClassNameToStyle(props);
+          return React.createElement(OriginalComponent, {
+            ...transformedProps,
+            ref,
+          });
+        });
+
+        // Preserve component properties
+        WrappedComponent.displayName = `Cyclone${componentName}`;
+        (WrappedComponent as any).__cyclonePatched = true;
+
+        // Copy static properties
+        Object.setPrototypeOf(WrappedComponent, OriginalComponent);
+        Object.assign(WrappedComponent, OriginalComponent);
+
+        // Replace the component in React Native module
+        ReactNative[componentName] = WrappedComponent;
+      }
+    });
+  } catch (error) {
+    console.warn("Could not patch React Native components directly:", error);
   }
+}
 
-  // Replace React.createElement globally
+let isSetup = false;
+
+export function setupClassName() {
+  if (isSetup) return;
+
+  // Method 1: Patch React.createElement (works for all components)
   (React as any).createElement = createElementWithClassName;
-  (React as any).__cycloneClassNameSetup = true;
 
-  // Also setup for JSX runtime if available
+  // Method 2: Patch React Native components directly
+  patchReactNativeComponents();
+
+  // Method 3: Patch JSX runtime
   try {
     const jsxRuntime = require("react/jsx-runtime");
-    if (jsxRuntime && jsxRuntime.jsx) {
+    if (jsxRuntime?.jsx) {
       const originalJsx = jsxRuntime.jsx;
       jsxRuntime.jsx = (type: any, props: any, key?: any) => {
-        // Transform className for any component that has it
-        if (props && props.className) {
-          const isSupportedStringComponent =
-            typeof type === "string" && SUPPORTED_COMPONENTS.has(type);
-          const isFunctionComponent = typeof type === "function";
-          const isStyleComponent =
-            typeof type === "object" && type && (type.displayName || type.name);
-
-          if (
-            isSupportedStringComponent ||
-            isFunctionComponent ||
-            isStyleComponent
-          ) {
-            const transformedProps = transformClassNameToStyle(props);
-            return originalJsx(type, transformedProps, key);
-          }
+        if (props && (props.className || props.contentContainerClassName)) {
+          const transformedProps = transformClassNameToStyle(props);
+          return originalJsx(type, transformedProps, key);
         }
         return originalJsx(type, props, key);
       };
     }
 
-    // Also handle jsxs for fragments and multiple children
-    if (jsxRuntime && jsxRuntime.jsxs) {
+    if (jsxRuntime?.jsxs) {
       const originalJsxs = jsxRuntime.jsxs;
       jsxRuntime.jsxs = (type: any, props: any, key?: any) => {
-        // Transform className for any component that has it
-        if (props && props.className) {
-          const isSupportedStringComponent =
-            typeof type === "string" && SUPPORTED_COMPONENTS.has(type);
-          const isFunctionComponent = typeof type === "function";
-          const isStyleComponent =
-            typeof type === "object" && type && (type.displayName || type.name);
-
-          if (
-            isSupportedStringComponent ||
-            isFunctionComponent ||
-            isStyleComponent
-          ) {
-            const transformedProps = transformClassNameToStyle(props);
-            return originalJsxs(type, transformedProps, key);
-          }
+        if (props && (props.className || props.contentContainerClassName)) {
+          const transformedProps = transformClassNameToStyle(props);
+          return originalJsxs(type, transformedProps, key);
         }
         return originalJsxs(type, props, key);
       };
     }
   } catch (error) {
-    // JSX runtime might not be available, that's okay
+    // JSX runtime not available, that's okay
   }
+
+  isSetup = true;
 }
 
-// Reset function for testing
-export function resetClassNameTransformer() {
-  (React as any).createElement = originalCreateElement;
-  (React as any).__cycloneClassNameSetup = false;
+export function styled<T extends React.ComponentType<any>>(
+  Component: T,
+  defaultClassName?: string
+) {
+  const StyledComponent = React.forwardRef<
+    any,
+    React.ComponentProps<T> & { className?: string }
+  >((props, ref) => {
+    const { className, style, ...restProps } = props;
+
+    const combinedClassName = defaultClassName
+      ? className
+        ? `${defaultClassName} ${className}`
+        : defaultClassName
+      : className;
+
+    const classNameStyle = combinedClassName
+      ? convertClassNameToStyle(combinedClassName)
+      : {};
+
+    const mergedStyle = style
+      ? Array.isArray(style)
+        ? [classNameStyle, ...style]
+        : [classNameStyle, style]
+      : classNameStyle;
+
+    return React.createElement(Component, {
+      ...restProps,
+      style: mergedStyle,
+      ref,
+    });
+  });
+
+  StyledComponent.displayName = `Styled(${
+    Component.displayName || Component.name || "Component"
+  })`;
+  return StyledComponent;
 }
 
-// Type declarations for className support
+export function cssInterop(
+  Component: React.ComponentType<any>,
+  mapping?: Record<string, string>
+) {
+  return styled(Component);
+}
+
+// TypeScript declarations for className support
 declare module "react-native" {
   interface ViewProps {
     className?: string;
   }
-
   interface TextProps {
     className?: string;
   }
-
   interface ImageProps {
     className?: string;
   }
-
   interface ScrollViewProps {
     className?: string;
+    contentContainerClassName?: string;
   }
-
   interface TouchableOpacityProps {
     className?: string;
   }
-
   interface TouchableHighlightProps {
     className?: string;
   }
-
   interface TouchableWithoutFeedbackProps {
     className?: string;
   }
-
   interface PressableProps {
     className?: string;
   }
-
   interface SafeAreaViewProps {
     className?: string;
   }
-
   interface FlatListProps<ItemT> {
     className?: string;
+    contentContainerClassName?: string;
   }
-
   interface SectionListProps<ItemT, SectionT> {
     className?: string;
+    contentContainerClassName?: string;
   }
-
+  interface VirtualizedListProps<ItemT> {
+    className?: string;
+    contentContainerClassName?: string;
+  }
   interface TextInputProps {
     className?: string;
   }
-
   interface SwitchProps {
     className?: string;
   }
-
   interface SliderProps {
     className?: string;
   }
-
   interface ActivityIndicatorProps {
     className?: string;
   }
-
   interface StatusBarProps {
     className?: string;
   }
-
   interface KeyboardAvoidingViewProps {
     className?: string;
   }
-
   interface RefreshControlProps {
     className?: string;
   }
-
   interface ImageBackgroundProps {
     className?: string;
   }
 }
 
-export { convertClassNameToStyle, updateClassNameTheme };
-
-export default {
-  setupClassNameTransformer,
-  resetClassNameTransformer,
-  convertClassNameToStyle,
-  updateClassNameTheme,
-};
+export { convertClassNameToStyle };
