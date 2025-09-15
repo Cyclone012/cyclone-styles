@@ -1,4 +1,4 @@
-import React from "react";
+import * as React from "react";
 import { StyleSheet, ViewStyle, TextStyle, ImageStyle } from "react-native";
 import { cs } from "./cs";
 
@@ -35,23 +35,32 @@ function convertClassNameToStyle(className: string): Style {
   const resolvedStyles: Style[] = [];
 
   for (const cls of classes) {
+    // Check custom classes first
     if (customClasses[cls]) {
       resolvedStyles.push(customClasses[cls]);
       continue;
     }
 
+    // Use cs() function for standard Tailwind classes
     try {
       const style = cs(cls);
       if (style && Object.keys(style).length > 0) {
         resolvedStyles.push(style);
       }
     } catch (error) {
-      console.warn(`Invalid className: ${cls}`);
+      // Don't log warnings for every invalid class - too noisy
+      // console.warn(`Invalid className: ${cls}`);
     }
   }
 
   const flattenedStyle = StyleSheet.flatten(resolvedStyles);
   cache.set(className, flattenedStyle);
+
+  // Debug logging
+  if (Object.keys(flattenedStyle).length > 0) {
+    console.log(`🎨 CycloneWind: "${className}" -> styles:`, flattenedStyle);
+  }
+
   return flattenedStyle;
 }
 
@@ -59,6 +68,11 @@ function transformClassNameToStyle(props: any) {
   if (!props || (!props.className && !props.contentContainerClassName)) {
     return props;
   }
+
+  console.log(
+    "🔄 CycloneWind: Transforming props with className:",
+    props.className
+  );
 
   const {
     className,
@@ -79,6 +93,7 @@ function transformClassNameToStyle(props: any) {
         : [classNameStyle, style]
       : classNameStyle;
     transformedProps.style = mergedStyle;
+    console.log("✅ CycloneWind: Applied className styles:", classNameStyle);
   } else if (style) {
     transformedProps.style = style;
   }
@@ -109,11 +124,132 @@ function createElementWithClassName(
   props: any,
   ...children: React.ReactNode[]
 ) {
+  // Log ALL React.createElement calls to debug what's happening
+  const typeInfo =
+    typeof type === "string"
+      ? type
+      : type?.displayName || type?.name || "Unknown";
+  console.log("🔄 React.createElement called:", {
+    type: typeInfo,
+    hasProps: !!props,
+    hasClassName: !!props?.className,
+    hasContentContainerClassName: !!props?.contentContainerClassName,
+    propsKeys: props ? Object.keys(props) : [],
+  });
+
+  // Always transform props if className or contentContainerClassName exists
   if (props && (props.className || props.contentContainerClassName)) {
+    console.log(
+      "🎯 CycloneWind: React.createElement intercepted for",
+      typeInfo,
+      "with className:",
+      props.className || props.contentContainerClassName
+    );
     const transformedProps = transformClassNameToStyle(props);
+    console.log("✅ Props transformed:", {
+      original: Object.keys(props),
+      transformed: Object.keys(transformedProps),
+      hasStyle: !!transformedProps.style,
+    });
     return originalCreateElement(type, transformedProps, ...children);
   }
   return originalCreateElement(type, props, ...children);
+}
+
+// Alternative module-level patching approach
+function patchReactNativeModule() {
+  try {
+    const Module = require("module");
+    const originalRequire = Module.prototype.require;
+
+    Module.prototype.require = function (id: string) {
+      const result = originalRequire.apply(this, arguments);
+
+      if (id === "react-native" && result && typeof result === "object") {
+        // Return a proxy that wraps components with className support
+        return new Proxy(result, {
+          get(target, prop) {
+            const original = target[prop];
+
+            // List of React Native components to wrap
+            const componentsToWrap = [
+              "View",
+              "Text",
+              "Image",
+              "ScrollView",
+              "SafeAreaView",
+              "TouchableOpacity",
+              "TouchableHighlight",
+              "TouchableWithoutFeedback",
+              "Pressable",
+              "FlatList",
+              "SectionList",
+              "VirtualizedList",
+              "TextInput",
+              "Switch",
+              "Slider",
+              "ActivityIndicator",
+              "KeyboardAvoidingView",
+              "RefreshControl",
+              "ImageBackground",
+            ];
+
+            if (
+              typeof prop === "string" &&
+              componentsToWrap.includes(prop) &&
+              original
+            ) {
+              // Check if already wrapped
+              if ((original as any).__cycloneWrapped) {
+                return original;
+              }
+
+              // Create wrapped component
+              const WrappedComponent = React.forwardRef(
+                (props: any, ref: any) => {
+                  const transformedProps = transformClassNameToStyle(props);
+                  return React.createElement(original, {
+                    ...transformedProps,
+                    ref,
+                  });
+                }
+              );
+
+              // Mark as wrapped and copy properties
+              (WrappedComponent as any).__cycloneWrapped = true;
+              WrappedComponent.displayName = `Cyclone${prop}`;
+              Object.setPrototypeOf(WrappedComponent, original);
+
+              // Copy static properties
+              Object.getOwnPropertyNames(original).forEach((propertyName) => {
+                if (
+                  propertyName !== "length" &&
+                  propertyName !== "name" &&
+                  propertyName !== "prototype"
+                ) {
+                  try {
+                    (WrappedComponent as any)[propertyName] = (original as any)[
+                      propertyName
+                    ];
+                  } catch (e) {
+                    // Some properties might not be writable
+                  }
+                }
+              });
+
+              return WrappedComponent;
+            }
+
+            return original;
+          },
+        });
+      }
+
+      return result;
+    };
+  } catch (error) {
+    console.warn("Could not patch module require:", error);
+  }
 }
 
 // Direct React Native component patching
@@ -147,6 +283,8 @@ function patchReactNativeComponents() {
     componentsToPath.forEach((componentName) => {
       const OriginalComponent = ReactNative[componentName];
       if (OriginalComponent && !(OriginalComponent as any).__cyclonePatched) {
+        console.log(`Patching ${componentName}...`);
+
         // Create wrapped component
         const WrappedComponent = React.forwardRef((props: any, ref: any) => {
           const transformedProps = transformClassNameToStyle(props);
@@ -160,12 +298,32 @@ function patchReactNativeComponents() {
         WrappedComponent.displayName = `Cyclone${componentName}`;
         (WrappedComponent as any).__cyclonePatched = true;
 
-        // Copy static properties
+        // Copy static properties and methods
         Object.setPrototypeOf(WrappedComponent, OriginalComponent);
-        Object.assign(WrappedComponent, OriginalComponent);
+        Object.getOwnPropertyNames(OriginalComponent).forEach((prop) => {
+          if (prop !== "length" && prop !== "name" && prop !== "prototype") {
+            try {
+              (WrappedComponent as any)[prop] = (OriginalComponent as any)[
+                prop
+              ];
+            } catch (e) {
+              // Some properties might not be writable
+            }
+          }
+        });
 
         // Replace the component in React Native module
-        ReactNative[componentName] = WrappedComponent;
+        try {
+          Object.defineProperty(ReactNative, componentName, {
+            value: WrappedComponent,
+            writable: true,
+            enumerable: true,
+            configurable: true,
+          });
+          console.log(`Successfully patched ${componentName}`);
+        } catch (error) {
+          console.warn(`Could not replace ${componentName}:`, error);
+        }
       }
     });
   } catch (error) {
@@ -175,43 +333,94 @@ function patchReactNativeComponents() {
 
 let isSetup = false;
 
+// Global flag to track if we need to use fallback mode
+let useFallbackMode = false;
+
 export function setupClassName() {
   if (isSetup) return;
 
-  // Method 1: Patch React.createElement (works for all components)
-  (React as any).createElement = createElementWithClassName;
+  console.log("🌪️ CycloneWind: Setting up global className support...");
 
-  // Method 2: Patch React Native components directly
-  patchReactNativeComponents();
+  // Method 1: Patch React.createElement FIRST (most reliable)
+  try {
+    (React as any).createElement = createElementWithClassName;
+    console.log("✅ React.createElement patched successfully");
+  } catch (error) {
+    console.error("❌ Failed to patch React.createElement:", error);
+    useFallbackMode = true;
+  }
 
-  // Method 3: Patch JSX runtime
+  // Method 2: Module-level patching (for future imports)
+  try {
+    patchReactNativeModule();
+    console.log("✅ Module-level patching enabled");
+  } catch (error) {
+    console.warn("⚠️ Module-level patching failed:", error);
+  }
+
+  // Method 3: Direct component patching (for already imported components)
+  try {
+    patchReactNativeComponents();
+    console.log("✅ Direct component patching attempted");
+  } catch (error) {
+    console.warn("⚠️ Direct component patching failed:", error);
+  }
+
+  // Method 4: Patch JSX runtime (for modern React)
   try {
     const jsxRuntime = require("react/jsx-runtime");
     if (jsxRuntime?.jsx) {
       const originalJsx = jsxRuntime.jsx;
       jsxRuntime.jsx = (type: any, props: any, key?: any) => {
         if (props && (props.className || props.contentContainerClassName)) {
+          console.log(
+            "🎯 JSX runtime intercepted:",
+            type?.displayName || type?.name || type
+          );
           const transformedProps = transformClassNameToStyle(props);
           return originalJsx(type, transformedProps, key);
         }
         return originalJsx(type, props, key);
       };
+      console.log("✅ JSX runtime jsx patched");
     }
 
     if (jsxRuntime?.jsxs) {
       const originalJsxs = jsxRuntime.jsxs;
       jsxRuntime.jsxs = (type: any, props: any, key?: any) => {
         if (props && (props.className || props.contentContainerClassName)) {
+          console.log(
+            "🎯 JSX runtime jsxs intercepted:",
+            type?.displayName || type?.name || type
+          );
           const transformedProps = transformClassNameToStyle(props);
           return originalJsxs(type, transformedProps, key);
         }
         return originalJsxs(type, props, key);
       };
+      console.log("✅ JSX runtime jsxs patched");
     }
   } catch (error) {
-    // JSX runtime not available, that's okay
+    console.warn("⚠️ JSX runtime patching failed:", error);
   }
 
+  // Method 5: Immediate testing and warning
+  setTimeout(() => {
+    console.log("🧪 CycloneWind: Testing className support...");
+    const testView = React.createElement("View", { className: "test" });
+    if (testView.props.className === "test") {
+      console.warn(
+        "⚠️ WARNING: className property was not transformed! Global className may not be working properly."
+      );
+      console.log(
+        "💡 TIP: Make sure you're importing 'cyclonewind/preset' in your root file BEFORE importing React Native components."
+      );
+    } else {
+      console.log("✅ Global className transformation is working!");
+    }
+  }, 100);
+
+  console.log("🌪️ CycloneWind: Global className setup complete!");
   isSetup = true;
 }
 

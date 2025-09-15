@@ -3,7 +3,7 @@
  * Enhanced utilities that work seamlessly with React Native's built-in features
  */
 
-import React from "react";
+import * as React from "react";
 import { Dimensions, Platform, PixelRatio } from "react-native";
 import { convertClassNameToStyle } from "./className";
 

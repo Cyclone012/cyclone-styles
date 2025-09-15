@@ -1,4 +1,5 @@
-import React, {
+import * as React from "react";
+import {
   createContext,
   useContext,
   useEffect,
@@ -109,6 +110,24 @@ export const useResponsiveStyle = () => {
 export type ThemeMode = "light" | "dark" | "system";
 
 interface ThemeContextType {
+  theme: {
+    colors: {
+      background: string;
+      foreground: string;
+      text: string;
+      primary: string;
+      secondary: string;
+      accent: string;
+      muted: string;
+      border: string;
+      input: string;
+      ring: string;
+      destructive: string;
+    };
+    spacing: Record<string, number>;
+    borderRadius: Record<string, number>;
+    fontSize: Record<string, number>;
+  };
   mode: ThemeMode;
   isDark: boolean;
   setMode: (mode: ThemeMode) => void;
@@ -228,7 +247,51 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({
     handleSetMode(newMode);
   };
 
+  // Create theme object based on current mode
+  const theme = {
+    colors: {
+      background: isDark ? "#0f0f23" : "#ffffff",
+      foreground: isDark ? "#ffffff" : "#0f0f23",
+      text: isDark ? "#ffffff" : "#0f0f23",
+      primary: isDark ? "#3b82f6" : "#2563eb",
+      secondary: isDark ? "#1f2937" : "#f3f4f6",
+      accent: isDark ? "#8b5cf6" : "#7c3aed",
+      muted: isDark ? "#374151" : "#6b7280",
+      border: isDark ? "#374151" : "#d1d5db",
+      input: isDark ? "#1f2937" : "#ffffff",
+      ring: isDark ? "#3b82f6" : "#2563eb",
+      destructive: isDark ? "#ef4444" : "#dc2626",
+    },
+    spacing: {
+      xs: 4,
+      sm: 8,
+      md: 16,
+      lg: 24,
+      xl: 32,
+      "2xl": 48,
+    },
+    borderRadius: {
+      none: 0,
+      sm: 2,
+      md: 6,
+      lg: 8,
+      xl: 12,
+      "2xl": 16,
+      full: 9999,
+    },
+    fontSize: {
+      xs: 12,
+      sm: 14,
+      base: 16,
+      lg: 18,
+      xl: 20,
+      "2xl": 24,
+      "3xl": 30,
+    },
+  };
+
   const value: ThemeContextType = {
+    theme,
     mode,
     isDark,
     setMode: handleSetMode,
