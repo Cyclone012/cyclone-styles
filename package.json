@@ -1,6 +1,6 @@
 {
   "name": "cyclonewind",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "The most complete Tailwind CSS implementation for React Native with perfect NativeWind-style className support and zero Metro configuration required.",
   "main": "lib/index.js",
   "react-native": "lib/index.js",

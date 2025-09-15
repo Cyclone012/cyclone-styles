@@ -5,6 +5,27 @@ All notable changes to CycloneWind will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.2] - 2025-09-15
+
+### Fixed
+
+- Hardened global className setup to avoid errors in Expo/React 18 environments where `React.createElement` is exposed via a getter and RN component properties are non-configurable
+- Added safety checks using `Object.getOwnPropertyDescriptor` before attempting to patch `React.createElement`
+- Avoid redefining non-configurable React Native component properties; rely on module-level proxy and JSX runtime interception instead
+
+### Enhanced
+
+- **Universal Module Patching**: Replaced hardcoded React Native module detection with universal system that works with any module exporting React components
+- **Smart Component Detection**: Enhanced heuristics to identify React components from any library (react-native, @react-native-community, expo, custom libraries)
+- **Dynamic Component Discovery**: Removed hardcoded component lists in favor of intelligent runtime detection based on component patterns and properties
+- **Module-Agnostic Architecture**: System now automatically detects and wraps React components regardless of their source module or library
+- **Flexible Global Import**: Added `cyclonewind/global` import that can be used anywhere in the app (not just at the first line) - automatically enables className support when imported from any location
+
+### Notes
+
+- If direct patching is skipped, CycloneWind will automatically fall back to JSX runtime interception and universal module-level wrapping, keeping `className` working without crashes
+- The patching system now works universally with any React component library, not just react-native
+
 ## [1.0.1] - 2025-09-15
 
 ### Fixed

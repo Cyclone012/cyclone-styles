@@ -26,6 +26,7 @@ export {
   styled,
   cssInterop,
   convertClassNameToStyle,
+  getComponentUsageStats,
 } from "./className";
 
 // Built-in styles and utilities

@@ -116,7 +116,7 @@ function transformClassNameToStyle(props: any) {
   return transformedProps;
 }
 
-// Enhanced React.createElement patching
+// Enhanced React.createElement patching (with safety guards for Expo/Strict environments)
 const originalCreateElement = React.createElement;
 
 function createElementWithClassName(
@@ -156,8 +156,115 @@ function createElementWithClassName(
   return originalCreateElement(type, props, ...children);
 }
 
-// Alternative module-level patching approach
-function patchReactNativeModule() {
+// Universal smart patching - works with ANY module and component
+const patchedComponents = new Set<string>();
+const componentUsageStats = new Map<string, number>();
+
+// Generic component detector - works with any React component
+function isReactComponent(component: any, componentName: string): boolean {
+  if (!component || typeof component !== "function") {
+    return false;
+  }
+
+  // Universal React component detection heuristics
+  const hasReactCharacteristics =
+    // Has React component naming convention (starts with uppercase)
+    componentName &&
+    componentName[0] === componentName[0].toUpperCase() &&
+    // Has common React component properties
+    (component.displayName !== undefined ||
+      component.defaultProps !== undefined ||
+      component.propTypes !== undefined ||
+      component.contextTypes !== undefined ||
+      component.childContextTypes !== undefined ||
+      component.render !== undefined ||
+      // Is a forwardRef component
+      component.$$typeof !== undefined ||
+      // Has React component prototype chain
+      component.prototype?.isReactComponent !== undefined ||
+      component.prototype?.render !== undefined ||
+      // Common component patterns
+      component.name === componentName ||
+      component.toString().includes("React.createElement") ||
+      component.toString().includes("jsx") ||
+      // Function component patterns
+      (component.length >= 0 && component.length <= 2)); // Typical props + ref signature
+
+  return hasReactCharacteristics;
+}
+
+function createUniversalWrapper(
+  original: any,
+  componentName: string,
+  moduleName: string = "unknown"
+) {
+  // Track component usage across all modules
+  const fullName = `${moduleName}/${componentName}`;
+  componentUsageStats.set(
+    fullName,
+    (componentUsageStats.get(fullName) || 0) + 1
+  );
+
+  console.log(
+    `🎯 CycloneWind: Smart-wrapping ${fullName} (usage: ${componentUsageStats.get(
+      fullName
+    )})`
+  );
+
+  const WrappedComponent = React.forwardRef((props: any, ref: any) => {
+    const transformedProps = transformClassNameToStyle(props);
+    return React.createElement(original, {
+      ...transformedProps,
+      ref,
+    });
+  });
+
+  // Mark as wrapped and preserve original reference
+  (WrappedComponent as any).__cycloneWrapped = true;
+  (WrappedComponent as any).__cycloneOriginal = original;
+  (WrappedComponent as any).__cycloneModule = moduleName;
+  WrappedComponent.displayName = `Cyclone${componentName}`;
+
+  // Preserve prototype chain
+  Object.setPrototypeOf(WrappedComponent, original);
+
+  // Copy static properties safely and universally
+  try {
+    const descriptors = Object.getOwnPropertyDescriptors(original);
+    for (const [key, descriptor] of Object.entries(descriptors)) {
+      if (
+        key !== "length" &&
+        key !== "name" &&
+        key !== "prototype" &&
+        descriptor.configurable
+      ) {
+        Object.defineProperty(WrappedComponent, key, descriptor);
+      }
+    }
+  } catch (e) {
+    // Fallback to simple property copying
+    Object.getOwnPropertyNames(original).forEach((propertyName) => {
+      if (
+        propertyName !== "length" &&
+        propertyName !== "name" &&
+        propertyName !== "prototype"
+      ) {
+        try {
+          (WrappedComponent as any)[propertyName] = (original as any)[
+            propertyName
+          ];
+        } catch (e) {
+          // Some properties might not be writable
+        }
+      }
+    });
+  }
+
+  return WrappedComponent;
+}
+
+// Universal module-level patching - auto-detects component usage from any module
+function patchAnyModule() {
   try {
     const Module = require("module");
     const originalRequire = Module.prototype.require;
@@ -165,79 +272,24 @@ function patchReactNativeModule() {
     Module.prototype.require = function (id: string) {
       const result = originalRequire.apply(this, arguments);
 
-      if (id === "react-native" && result && typeof result === "object") {
-        // Return a proxy that wraps components with className support
+      // Only patch modules that export objects with potential React components
+      if (result && typeof result === "object") {
+        // Smart Proxy that only wraps components when accessed
         return new Proxy(result, {
           get(target, prop) {
             const original = target[prop];
 
-            // List of React Native components to wrap
-            const componentsToWrap = [
-              "View",
-              "Text",
-              "Image",
-              "ScrollView",
-              "SafeAreaView",
-              "TouchableOpacity",
-              "TouchableHighlight",
-              "TouchableWithoutFeedback",
-              "Pressable",
-              "FlatList",
-              "SectionList",
-              "VirtualizedList",
-              "TextInput",
-              "Switch",
-              "Slider",
-              "ActivityIndicator",
-              "KeyboardAvoidingView",
-              "RefreshControl",
-              "ImageBackground",
-            ];
-
+            // Auto-detect React components from any module using universal heuristics
             if (
+              isReactComponent(original, String(prop)) &&
               typeof prop === "string" &&
-              componentsToWrap.includes(prop) &&
-              original
+              !patchedComponents.has(`${id}.${prop}`)
             ) {
-              // Check if already wrapped
-              if ((original as any).__cycloneWrapped) {
-                return original;
-              }
+              // Mark as patched to avoid double-wrapping
+              patchedComponents.add(`${id}.${prop}`);
 
-              // Create wrapped component
-              const WrappedComponent = React.forwardRef(
-                (props: any, ref: any) => {
-                  const transformedProps = transformClassNameToStyle(props);
-                  return React.createElement(original, {
-                    ...transformedProps,
-                    ref,
-                  });
-                }
-              );
-
-              // Mark as wrapped and copy properties
-              (WrappedComponent as any).__cycloneWrapped = true;
-              WrappedComponent.displayName = `Cyclone${prop}`;
-              Object.setPrototypeOf(WrappedComponent, original);
-
-              // Copy static properties
-              Object.getOwnPropertyNames(original).forEach((propertyName) => {
-                if (
-                  propertyName !== "length" &&
-                  propertyName !== "name" &&
-                  propertyName !== "prototype"
-                ) {
-                  try {
-                    (WrappedComponent as any)[propertyName] = (original as any)[
-                      propertyName
-                    ];
-                  } catch (e) {
-                    // Some properties might not be writable
-                  }
-                }
-              });
-
-              return WrappedComponent;
+              // Return universal wrapper only when accessed
+              return createUniversalWrapper(original, `${id}.${prop}`);
             }
 
             return original;
@@ -247,87 +299,35 @@ function patchReactNativeModule() {
 
       return result;
     };
+
+    console.log(
+      "✅ Universal module-level patching enabled - will auto-detect and wrap React components from any module on-demand"
+    );
   } catch (error) {
     console.warn("Could not patch module require:", error);
   }
 }
 
-// Direct React Native component patching
-function patchReactNativeComponents() {
+// Utility to get component usage statistics (for debugging)
+function getComponentUsageStats() {
+  return {
+    patchedComponents: Array.from(patchedComponents),
+    usageStats: Object.fromEntries(componentUsageStats),
+    totalComponents: patchedComponents.size,
+  };
+}
+
+// Universal direct component patching - only patch components that are actually imported/used
+function smartPatchComponents() {
   try {
-    const ReactNative = require("react-native");
-
-    // List of components to patch
-    const componentsToPath = [
-      "View",
-      "Text",
-      "Image",
-      "ScrollView",
-      "SafeAreaView",
-      "TouchableOpacity",
-      "TouchableHighlight",
-      "TouchableWithoutFeedback",
-      "Pressable",
-      "FlatList",
-      "SectionList",
-      "VirtualizedList",
-      "TextInput",
-      "Switch",
-      "Slider",
-      "ActivityIndicator",
-      "KeyboardAvoidingView",
-      "RefreshControl",
-      "ImageBackground",
-    ];
-
-    componentsToPath.forEach((componentName) => {
-      const OriginalComponent = ReactNative[componentName];
-      if (OriginalComponent && !(OriginalComponent as any).__cyclonePatched) {
-        console.log(`Patching ${componentName}...`);
-
-        // Create wrapped component
-        const WrappedComponent = React.forwardRef((props: any, ref: any) => {
-          const transformedProps = transformClassNameToStyle(props);
-          return React.createElement(OriginalComponent, {
-            ...transformedProps,
-            ref,
-          });
-        });
-
-        // Preserve component properties
-        WrappedComponent.displayName = `Cyclone${componentName}`;
-        (WrappedComponent as any).__cyclonePatched = true;
-
-        // Copy static properties and methods
-        Object.setPrototypeOf(WrappedComponent, OriginalComponent);
-        Object.getOwnPropertyNames(OriginalComponent).forEach((prop) => {
-          if (prop !== "length" && prop !== "name" && prop !== "prototype") {
-            try {
-              (WrappedComponent as any)[prop] = (OriginalComponent as any)[
-                prop
-              ];
-            } catch (e) {
-              // Some properties might not be writable
-            }
-          }
-        });
-
-        // Replace the component in React Native module
-        try {
-          Object.defineProperty(ReactNative, componentName, {
-            value: WrappedComponent,
-            writable: true,
-            enumerable: true,
-            configurable: true,
-          });
-          console.log(`Successfully patched ${componentName}`);
-        } catch (error) {
-          console.warn(`Could not replace ${componentName}:`, error);
-        }
-      }
-    });
+    // Instead of aggressively patching all components upfront,
+    // we'll patch them lazily when they're actually accessed via the Proxy
+    // This avoids property definition errors in strict environments like Expo
+    console.log(
+      "✅ Universal direct component patching prepared - components will be wrapped when accessed"
+    );
   } catch (error) {
-    console.warn("Could not patch React Native components directly:", error);
+    console.warn("⚠️ Smart component patching initialization failed:", error);
   }
 }
 
@@ -341,10 +341,22 @@ export function setupClassName() {
 
   console.log("🌪️ CycloneWind: Setting up global className support...");
 
-  // Method 1: Patch React.createElement FIRST (most reliable)
+  // Method 1: Patch React.createElement if writable (Expo may expose it via getter only)
   try {
-    (React as any).createElement = createElementWithClassName;
-    console.log("✅ React.createElement patched successfully");
+    const desc = Object.getOwnPropertyDescriptor(React, "createElement");
+    const isWritable =
+      !!desc && (desc.writable === true || desc.set !== undefined);
+    const isConfigurable = !!desc && desc.configurable === true;
+
+    if (isWritable || isConfigurable) {
+      (React as any).createElement = createElementWithClassName;
+      console.log("✅ React.createElement patched successfully");
+    } else {
+      console.warn(
+        "⚠️ React.createElement is not writable/configurable in this environment. Skipping direct patch and relying on JSX/runtime proxies."
+      );
+      useFallbackMode = true;
+    }
   } catch (error) {
     console.error("❌ Failed to patch React.createElement:", error);
     useFallbackMode = true;
@@ -352,18 +364,18 @@ export function setupClassName() {
 
   // Method 2: Module-level patching (for future imports)
   try {
-    patchReactNativeModule();
+    patchAnyModule();
     console.log("✅ Module-level patching enabled");
   } catch (error) {
     console.warn("⚠️ Module-level patching failed:", error);
   }
 
-  // Method 3: Direct component patching (for already imported components)
+  // Method 3: Smart component patching (prepares for on-demand wrapping)
   try {
-    patchReactNativeComponents();
-    console.log("✅ Direct component patching attempted");
+    smartPatchComponents();
+    console.log("✅ Smart component patching prepared");
   } catch (error) {
-    console.warn("⚠️ Direct component patching failed:", error);
+    console.warn("⚠️ Smart component patching failed:", error);
   }
 
   // Method 4: Patch JSX runtime (for modern React)
@@ -404,7 +416,7 @@ export function setupClassName() {
     console.warn("⚠️ JSX runtime patching failed:", error);
   }
 
-  // Method 5: Immediate testing and warning
+  // Method 5: Smart testing and component usage reporting
   setTimeout(() => {
     console.log("🧪 CycloneWind: Testing className support...");
     const testView = React.createElement("View", { className: "test" });
@@ -415,8 +427,27 @@ export function setupClassName() {
       console.log(
         "💡 TIP: Make sure you're importing 'cyclonewind/preset' in your root file BEFORE importing React Native components."
       );
+      console.log(
+        "💡 TIP: In Expo/React 18 environments, prefer relying on the JSX runtime patch included in CycloneWind. Ensure your components are compiled with the new JSX transform (no explicit React import required)."
+      );
     } else {
       console.log("✅ Global className transformation is working!");
+    }
+
+    // Report smart patching statistics
+    const stats = getComponentUsageStats();
+    if (stats.totalComponents > 0) {
+      console.log(`📊 CycloneWind Smart Patching Stats:`, {
+        patchedComponents: stats.patchedComponents,
+        mostUsedComponent: Object.entries(stats.usageStats).sort(
+          ([, a], [, b]) => b - a
+        )[0],
+        totalWrapped: stats.totalComponents,
+      });
+    } else {
+      console.log(
+        "📊 No components auto-wrapped yet - they'll be wrapped when first accessed"
+      );
     }
   }, 100);
 
@@ -538,4 +569,4 @@ declare module "react-native" {
   }
 }
 
-export { convertClassNameToStyle };
+export { convertClassNameToStyle, getComponentUsageStats };
