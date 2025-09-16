@@ -1,33 +1,18 @@
 /**
- * CycloneWind - NativeWind Compatible Tailwind CSS for React Native
+ * CycloneWind - Tailwind CSS Utilities for React Native
  */
 
-// Core style function (can be used without className)
-export { default as cs } from "./cs";
+// Core style function - main way to use CycloneWind
+export { default as cs, setThemeContext } from "./cs";
 
 // Theme system
 export {
   ThemeProvider,
   useTheme,
-  useResponsive,
-  useResponsiveStyle,
-  getThemeValue,
-  getThemeColorValue,
-  type ThemeMode,
-  type ThemeContextType,
+  useThemeAware,
+  updateGlobalTheme,
+  getGlobalTheme,
 } from "./theme";
-
-// NativeWind-style className support (manual setup)
-export {
-  setupClassName,
-  vars,
-  registerCustomClass,
-  registerCustomClasses,
-  styled,
-  cssInterop,
-  convertClassNameToStyle,
-  getComponentUsageStats,
-} from "./className";
 
 // Built-in styles and utilities
 export {
@@ -42,17 +27,10 @@ export {
   isLargeScreen,
 } from "./styles";
 
-// Global configuration
-export {
-  configure,
-  getConfig,
-  setupCycloneStyles,
-  extendTheme,
-  addUtilities,
-  type ThemeConfig,
-} from "./global";
+// Configuration
+export { configure, getConfig, type ThemeConfig } from "./config";
 
-// Export custom styles and override system
+// Export custom styles and utilities
 export {
   createCustomStyle,
   createCustomStyles,
@@ -77,5 +55,28 @@ export {
   createConfiguredStyle,
 } from "./customStyles";
 
-// Default export for global setup
-export { default } from "./global";
+// React Native specific utilities
+export {
+  platformClassName,
+  responsiveClassName,
+  getScreenDimensions,
+  getWindowDimensions,
+  screenWidth,
+  screenHeight,
+  windowWidth,
+  windowHeight,
+  isTablet,
+  isPhone,
+  isIOS,
+  isAndroid,
+  isWeb,
+  devicePixelRatio,
+  isHighDPI,
+  isRetina,
+  getScreenOrientation,
+  breakpoints,
+  isScreenSize,
+  getResponsiveValue as getResponsiveUtilityValue,
+  hasSafeArea,
+  type ScreenOrientation,
+} from "./reactNativeUtils";

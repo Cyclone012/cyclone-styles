@@ -3,11 +3,18 @@ node_modules/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+.pnpm-debug.log*
 
 # Build output
 lib/
 dist/
 build/
+out/
+
+# TypeScript cache
+*.tsbuildinfo
+*.d.ts.map
+*.js.map
 
 # OS generated files
 .DS_Store
@@ -38,6 +45,7 @@ pids
 # Coverage directory used by tools like istanbul
 coverage/
 .nyc_output/
+*.lcov
 
 # Dependency directories
 jspm_packages/
@@ -57,13 +65,34 @@ jspm_packages/
 # dotenv environment variables file
 .env
 .env.test
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
 
 # Temporary folders
 tmp/
 temp/
 
-# Test files
-test-*.js
-test-*.ts
-*.test.js
-*.test.ts
+# React Native specific
+.expo/
+web-build/
+*.jsbundle
+.metro-health-check*
+
+# Package manager locks (for libraries, only keep yarn.lock)
+package-lock.json
+pnpm-lock.yaml
+
+# Debug and documentation files
+debug-*.md
+*-test-*.tsx
+*-example.tsx
+*-guide.md
+*-solution.md
+*.backup
+*.bak
+
+# Expo
+.expo/
+web-build/

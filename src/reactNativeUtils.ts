@@ -5,7 +5,6 @@
 
 import * as React from "react";
 import { Dimensions, Platform, PixelRatio } from "react-native";
-import { convertClassNameToStyle } from "./className";
 
 // Screen dimension utilities
 export const getScreenDimensions = () => {
@@ -18,184 +17,111 @@ export const getWindowDimensions = () => {
   return { width, height };
 };
 
-// Platform-specific className utilities
-export const platformClassName = (
-  ios: string,
-  android: string,
-  web?: string
-) => {
-  if (Platform.OS === "ios") return ios;
-  if (Platform.OS === "android") return android;
-  if (Platform.OS === "web" && web) return web;
-  return "";
+// Platform-specific class name utilities that return CSS class strings to be used with cs()
+export const platformClassName = (options: {
+  ios?: string;
+  android?: string;
+  web?: string;
+  default?: string;
+}) => {
+  if (Platform.OS === "ios" && options.ios) return options.ios;
+  if (Platform.OS === "android" && options.android) return options.android;
+  if (Platform.OS === "web" && options.web) return options.web;
+  return options.default || "";
 };
 
-// Responsive className based on screen size
+// Responsive class name based on screen size that returns CSS class strings to be used with cs()
 export const responsiveClassName = (
-  base: string,
-  overrides: {
-    sm?: string;
-    md?: string;
-    lg?: string;
-    xl?: string;
+  screenWidth: number,
+  options: {
+    small?: string;
+    medium?: string;
+    large?: string;
+    xlarge?: string;
   }
 ) => {
-  const { width } = getScreenDimensions();
-  let className = base;
-
-  if (width >= 640 && overrides.sm) className += ` ${overrides.sm}`;
-  if (width >= 768 && overrides.md) className += ` ${overrides.md}`;
-  if (width >= 1024 && overrides.lg) className += ` ${overrides.lg}`;
-  if (width >= 1280 && overrides.xl) className += ` ${overrides.xl}`;
-
-  return className;
+  if (screenWidth >= 1280 && options.xlarge) return options.xlarge;
+  if (screenWidth >= 1024 && options.large) return options.large;
+  if (screenWidth >= 768 && options.medium) return options.medium;
+  return options.small || "";
 };
 
-// High DPI className utilities
-export const pixelRatioClassName = (className: string) => {
-  const ratio = PixelRatio.get();
-  if (ratio >= 3) return `${className} retina-3x`;
-  if (ratio >= 2) return `${className} retina-2x`;
-  return className;
+// Utility functions for getting screen information
+export const screenWidth = () => Dimensions.get("screen").width;
+export const screenHeight = () => Dimensions.get("screen").height;
+export const windowWidth = () => Dimensions.get("window").width;
+export const windowHeight = () => Dimensions.get("window").height;
+
+// Device type detection
+export const isTablet = () => {
+  const { width, height } = Dimensions.get("screen");
+  const aspectRatio = Math.max(width, height) / Math.min(width, height);
+  return aspectRatio < 1.6;
 };
 
-// Safe area utilities for different devices
-export const safeAreaClassName = (className: string) => {
+export const isPhone = () => !isTablet();
+
+// Platform detection
+export const isIOS = Platform.OS === "ios";
+export const isAndroid = Platform.OS === "android";
+export const isWeb = Platform.OS === "web";
+
+// Device pixel ratio
+export const devicePixelRatio = () => PixelRatio.get();
+
+// High DPI detection
+export const isHighDPI = () => PixelRatio.get() >= 2;
+export const isRetina = () => PixelRatio.get() >= 2;
+
+// Screen orientation
+export type ScreenOrientation = "portrait" | "landscape";
+
+export const getScreenOrientation = (): ScreenOrientation => {
+  const { width, height } = Dimensions.get("screen");
+  return width > height ? "landscape" : "portrait";
+};
+
+// Responsive breakpoint utilities
+export const breakpoints = {
+  sm: 640,
+  md: 768,
+  lg: 1024,
+  xl: 1280,
+};
+
+export const isScreenSize = (size: keyof typeof breakpoints) => {
+  const width = Dimensions.get("screen").width;
+  return width >= breakpoints[size];
+};
+
+// Utility to get responsive value based on screen width
+export const getResponsiveValue = <T>(
+  values: {
+    default: T;
+    sm?: T;
+    md?: T;
+    lg?: T;
+    xl?: T;
+  }
+) => {
+  const width = Dimensions.get("screen").width;
+  
+  if (width >= breakpoints.xl && values.xl !== undefined) return values.xl;
+  if (width >= breakpoints.lg && values.lg !== undefined) return values.lg;
+  if (width >= breakpoints.md && values.md !== undefined) return values.md;
+  if (width >= breakpoints.sm && values.sm !== undefined) return values.sm;
+  
+  return values.default;
+};
+
+// Safe area detection (basic)
+export const hasSafeArea = () => {
   if (Platform.OS === "ios") {
-    return `${className} safe-area-ios`;
+    const { height } = Dimensions.get("screen");
+    // iPhone X and newer have safe areas
+    return height >= 812;
   }
-  if (Platform.OS === "android") {
-    return `${className} safe-area-android`;
-  }
-  return className;
-};
-
-// React Native component-specific className helpers
-export const containerContentClasses = (
-  containerClass: string,
-  contentClass?: string
-) => {
-  return {
-    className: containerClass,
-    contentContainerClassName: contentClass,
-  };
-};
-
-export const listClasses = (containerClass: string, contentClass?: string) => {
-  return {
-    className: containerClass,
-    contentContainerClassName: contentClass,
-  };
-};
-
-// Enhanced className processor for React Native
-export const processReactNativeClassName = (className: string) => {
-  if (!className) return {};
-
-  // Add platform-specific processing
-  let processedClassName = className;
-
-  // Handle platform prefixes
-  if (Platform.OS === "ios") {
-    processedClassName = processedClassName
-      .replace(/ios:/g, "")
-      .replace(/android:[^\s]+/g, "");
-  } else if (Platform.OS === "android") {
-    processedClassName = processedClassName
-      .replace(/android:/g, "")
-      .replace(/ios:[^\s]+/g, "");
-  }
-
-  // Convert to style
-  return convertClassNameToStyle(processedClassName);
-};
-
-// React Native-specific className combiners
-export const combineClassNames = (
-  ...classNames: (string | undefined | null | false)[]
-): string => {
-  return classNames.filter(Boolean).join(" ").trim();
-};
-
-// HOC for automatic className support
-export const withClassName = <P extends object>(
-  Component: React.ComponentType<P>
-) => {
-  return React.forwardRef<any, P & { className?: string }>((props, ref) => {
-    const { className, style, ...restProps } = props as any;
-
-    const classNameStyle = className
-      ? processReactNativeClassName(className)
-      : {};
-    const mergedStyle = style
-      ? Array.isArray(style)
-        ? [classNameStyle, ...style]
-        : [classNameStyle, style]
-      : classNameStyle;
-
-    return React.createElement(Component, {
-      ...restProps,
-      style: mergedStyle,
-      ref,
-    } as P);
-  });
-};
-
-// Text component helper with automatic font scaling
-export const textClassName = (className: string, allowFontScaling = true) => {
-  const style = processReactNativeClassName(className);
-  return {
-    style,
-    allowFontScaling,
-  };
-};
-
-// Image component helper with proper resizing
-export const imageClassName = (
-  className: string,
-  resizeMode: "cover" | "contain" | "stretch" | "repeat" | "center" = "cover"
-) => {
-  const style = processReactNativeClassName(className);
-  return {
-    style,
-    resizeMode,
-  };
-};
-
-// ScrollView helper with proper keyboard handling
-export const enhancedScrollView = (
-  className: string,
-  contentClassName?: string,
-  keyboardShouldPersistTaps: "always" | "never" | "handled" = "handled"
-) => {
-  return {
-    style: processReactNativeClassName(className),
-    contentContainerStyle: contentClassName
-      ? processReactNativeClassName(contentClassName)
-      : undefined,
-    keyboardShouldPersistTaps,
-  };
-};
-
-// Pressable helper with automatic hit slop
-export const pressableClassName = (className: string, hitSlop = 8) => {
-  return {
-    style: processReactNativeClassName(className),
-    hitSlop,
-  };
-};
-
-// TextInput helper with proper styling
-export const textInputClassName = (
-  className: string,
-  autoCorrect = false,
-  autoCapitalize: "none" | "sentences" | "words" | "characters" = "none"
-) => {
-  return {
-    style: processReactNativeClassName(className),
-    autoCorrect,
-    autoCapitalize,
-  };
+  return false;
 };
 
 export default {
@@ -203,14 +129,21 @@ export default {
   getWindowDimensions,
   platformClassName,
   responsiveClassName,
-  pixelRatioClassName,
-  safeAreaClassName,
-  processReactNativeClassName,
-  combineClassNames,
-  withClassName,
-  textClassName,
-  imageClassName,
-  enhancedScrollView,
-  pressableClassName,
-  textInputClassName,
+  screenWidth,
+  screenHeight,
+  windowWidth,
+  windowHeight,
+  isTablet,
+  isPhone,
+  isIOS,
+  isAndroid,
+  isWeb,
+  devicePixelRatio,
+  isHighDPI,
+  isRetina,
+  getScreenOrientation,
+  breakpoints,
+  isScreenSize,
+  getResponsiveValue,
+  hasSafeArea,
 };

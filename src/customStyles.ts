@@ -5,7 +5,6 @@
 
 import { ViewStyle, TextStyle, ImageStyle } from "react-native";
 import { cs, merge } from "./cs";
-import { addUtilities } from "./global";
 
 // Type definitions for better TypeScript support
 type StyleObject = ViewStyle | TextStyle | ImageStyle;
@@ -56,10 +55,8 @@ export function registerCustomClass(
 ): void {
   customClassRegistry.set(className, style);
 
-  // Add to global utilities so className can find it
-  const utilities: Record<string, any> = {};
-  utilities[className] = style;
-  addUtilities(utilities);
+  // Add to cs utilities so it can be used with cs() function
+  cs.registerCustomClass(className, style);
 }
 
 // Register multiple custom classes at once
@@ -68,10 +65,9 @@ export function registerCustomClasses(
 ): void {
   for (const [className, style] of Object.entries(classes)) {
     customClassRegistry.set(className, style);
+    // Add each to cs utilities
+    cs.registerCustomClass(className, style);
   }
-
-  // Add all to global utilities
-  addUtilities(classes);
 }
 
 // Create and register custom classes in one step

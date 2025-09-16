@@ -1,320 +1,237 @@
-import * as React from "react";
-import {
+import React, {
   createContext,
   useContext,
-  useEffect,
   useState,
-  ReactNode,
+  useEffect,
+  useCallback,
 } from "react";
-import { Appearance, ColorSchemeName, Dimensions } from "react-native";
+import { Appearance, ColorSchemeName } from "react-native";
 
-// Import the setThemeContext function from cs.ts
-import { setThemeContext } from "./cs";
-// Removed preset import to avoid circular dependency with preset -> global -> theme
-
-// Simple storage interface for theme persistence
-const storage = {
-  async getItem(key: string): Promise<string | null> {
-    try {
-      // Try to import AsyncStorage dynamically
-      const AsyncStorage =
-        require("@react-native-async-storage/async-storage").default;
-      return await AsyncStorage.getItem(key);
-    } catch {
-      // Fallback to no persistence if AsyncStorage is not available
-      return null;
-    }
-  },
-  async setItem(key: string, value: string): Promise<void> {
-    try {
-      // Try to import AsyncStorage dynamically
-      const AsyncStorage =
-        require("@react-native-async-storage/async-storage").default;
-      await AsyncStorage.setItem(key, value);
-    } catch {
-      // Fallback to no persistence if AsyncStorage is not available
-      return;
-    }
-  },
+// Global theme state - outside React to avoid context issues
+let globalThemeState = {
+  isDark: false,
+  mode: "system" as "light" | "dark" | "system",
+  systemScheme: "light" as ColorSchemeName,
 };
 
-import {
-  styles,
-  getThemeColor,
-  getScreenWidth,
-  getScreenHeight,
-  isSmallScreen,
-  isMediumScreen,
-  isLargeScreen,
-  breakpoints,
-  getCurrentBreakpoint,
-  matchesBreakpoint,
-  isAtLeastBreakpoint,
-} from "./styles";
+// Global listeners for theme changes
+const themeListeners = new Set<() => void>();
 
-// Responsive hook for screen size changes
-export const useResponsive = () => {
-  const [screenData, setScreenData] = useState(() => ({
-    width: getScreenWidth(),
-    height: getScreenHeight(),
-    isSmall: isSmallScreen(),
-    isMedium: isMediumScreen(),
-    isLarge: isLargeScreen(),
-  }));
+// Global theme update function
+export const updateGlobalTheme = (
+  newState: Partial<typeof globalThemeState>
+) => {
+  const prevIsDark = globalThemeState.isDark;
 
-  useEffect(() => {
-    const subscription = Dimensions.addEventListener("change", ({ window }) => {
-      setScreenData({
-        width: window.width,
-        height: window.height,
-        isSmall: window.width < 768,
-        isMedium: window.width >= 768 && window.width < 1024,
-        isLarge: window.width >= 1024,
-      });
+  globalThemeState = { ...globalThemeState, ...newState };
+
+  // Calculate isDark
+  globalThemeState.isDark =
+    globalThemeState.mode === "dark" ||
+    (globalThemeState.mode === "system" &&
+      globalThemeState.systemScheme === "dark");
+
+  console.log("🔄 Global theme updated:", globalThemeState);
+
+  // Notify cs() function about theme change
+  try {
+    const { setThemeContext } = require("./cs");
+    setThemeContext({ isDark: globalThemeState.isDark });
+  } catch (error) {
+    console.error("Failed to update cs theme context:", error);
+  }
+
+  // Notify all listeners if isDark actually changed
+  if (prevIsDark !== globalThemeState.isDark) {
+    console.log(
+      "🎨 Theme changed, notifying",
+      themeListeners.size,
+      "listeners"
+    );
+    themeListeners.forEach((listener) => {
+      try {
+        listener();
+      } catch (error) {
+        console.error("Theme listener error:", error);
+      }
     });
-
-    return () => subscription?.remove?.();
-  }, []);
-
-  return screenData;
+  }
 };
 
-// Responsive style helper
-export const useResponsiveStyle = () => {
-  const { isSmall, isMedium, isLarge, width, height } = useResponsive();
+// Get current global theme state
+export const getGlobalTheme = () => ({ ...globalThemeState });
 
-  const getStyle = (smallStyle: any, mediumStyle?: any, largeStyle?: any) => {
-    if (isLarge && largeStyle) return largeStyle;
-    if (isMedium && mediumStyle) return mediumStyle;
-    return smallStyle;
-  };
-
-  const getResponsiveValue = (small: any, medium?: any, large?: any) => {
-    if (isLarge && large !== undefined) return large;
-    if (isMedium && medium !== undefined) return medium;
-    return small;
-  };
-
-  return {
-    isSmall,
-    isMedium,
-    isLarge,
-    width,
-    height,
-    getStyle,
-    getResponsiveValue,
+// Subscribe to theme changes
+export const subscribeToGlobalTheme = (listener: () => void): (() => void) => {
+  themeListeners.add(listener);
+  return () => {
+    themeListeners.delete(listener);
   };
 };
 
-// Theme context interface
-export type ThemeMode = "light" | "dark" | "system";
-
+// Theme context for React components
 interface ThemeContextType {
-  theme: {
-    colors: {
-      background: string;
-      foreground: string;
-      text: string;
-      primary: string;
-      secondary: string;
-      accent: string;
-      muted: string;
-      border: string;
-      input: string;
-      ring: string;
-      destructive: string;
-    };
-    spacing: Record<string, number>;
-    borderRadius: Record<string, number>;
-    fontSize: Record<string, number>;
-  };
-  mode: ThemeMode;
   isDark: boolean;
-  setMode: (mode: ThemeMode) => void;
+  mode: "light" | "dark" | "system";
+  systemScheme: ColorSchemeName;
+  setMode: (mode: "light" | "dark" | "system") => void;
   toggleTheme: () => void;
+  forceUpdate: () => void;
 }
 
-export type { ThemeContextType };
+const ThemeContext = createContext<ThemeContextType | null>(null);
 
-const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
+// Storage helper
+const themeStorage = {
+  async get(): Promise<"light" | "dark" | "system"> {
+    try {
+      const AsyncStorage =
+        require("@react-native-async-storage/async-storage").default;
+      const saved = await AsyncStorage.getItem("cyclone-theme-mode");
+      return (saved as any) || "system";
+    } catch {
+      return "system";
+    }
+  },
+  async set(mode: "light" | "dark" | "system"): Promise<void> {
+    try {
+      const AsyncStorage =
+        require("@react-native-async-storage/async-storage").default;
+      await AsyncStorage.setItem("cyclone-theme-mode", mode);
+    } catch {
+      // Ignore storage errors
+    }
+  },
+};
 
+// Theme Provider
+export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
+  const [renderKey, setRenderKey] = useState(0);
+  const [localState, setLocalState] = useState(() => getGlobalTheme());
+
+  // Force re-render function
+  const forceUpdate = useCallback(() => {
+    setRenderKey((prev) => prev + 1);
+    setLocalState(getGlobalTheme());
+  }, []);
+
+  // Initialize theme on mount
+  useEffect(() => {
+    const initialize = async () => {
+      // Get system theme
+      const systemScheme = Appearance.getColorScheme();
+
+      // Load saved mode
+      const savedMode = await themeStorage.get();
+
+      // Update global state
+      updateGlobalTheme({
+        mode: savedMode,
+        systemScheme,
+      });
+
+      // Update local state
+      setLocalState(getGlobalTheme());
+    };
+
+    initialize();
+  }, []);
+
+  // Listen to system theme changes
+  useEffect(() => {
+    const subscription = Appearance.addChangeListener(({ colorScheme }) => {
+      console.log("📱 System theme changed to:", colorScheme);
+      updateGlobalTheme({ systemScheme: colorScheme });
+      forceUpdate();
+    });
+
+    return () => subscription?.remove();
+  }, [forceUpdate]);
+
+  // Subscribe to global theme changes
+  useEffect(() => {
+    const unsubscribe = subscribeToGlobalTheme(() => {
+      console.log("🔄 Theme listener triggered, forcing update");
+      forceUpdate();
+    });
+    return unsubscribe;
+  }, [forceUpdate]);
+
+  // Theme actions
+  const setMode = useCallback(
+    async (mode: "light" | "dark" | "system") => {
+      console.log("🔄 Setting mode to:", mode);
+
+      // Save to storage
+      await themeStorage.set(mode);
+
+      // Update global state
+      updateGlobalTheme({ mode });
+
+      // Force update
+      forceUpdate();
+    },
+    [forceUpdate]
+  );
+
+  const toggleTheme = useCallback(() => {
+    const newMode = localState.isDark ? "light" : "dark";
+    console.log("🔄 Toggling theme to:", newMode);
+    setMode(newMode);
+  }, [localState.isDark, setMode]);
+
+  const contextValue: ThemeContextType = {
+    isDark: localState.isDark,
+    mode: localState.mode,
+    systemScheme: localState.systemScheme,
+    setMode,
+    toggleTheme,
+    forceUpdate,
+  };
+
+  console.log("🎨 ThemeProvider render:", { renderKey, ...localState });
+
+  return React.createElement(
+    ThemeContext.Provider,
+    { value: contextValue, key: renderKey },
+    children
+  );
+};
+
+// Hook to use the theme
 export const useTheme = (): ThemeContextType => {
   const context = useContext(ThemeContext);
   if (!context) {
-    throw new Error("useTheme must be used within a ThemeProvider");
+    throw new Error("useTheme must be used within ThemeProvider");
   }
   return context;
 };
 
-// Custom theme color utilities
-export const getThemeValue = (
-  lightValue: string,
-  darkValue: string,
-  isDark: boolean
-): string => {
-  return isDark ? darkValue : lightValue;
-};
+// Hook for components that use cs() directly - forces re-render on theme change
+export const useThemeAware = () => {
+  const [, setUpdate] = useState({});
 
-// Get theme colors with support for all color variations
-const themeColors: { [key: string]: { light: string; dark: string } } = {
-  background: { light: "#ffffff", dark: "#000000" },
-  foreground: { light: "#000000", dark: "#ffffff" },
-  primary: { light: "#3b82f6", dark: "#60a5fa" },
-  "primary-foreground": { light: "#ffffff", dark: "#1e3a8a" },
-  secondary: { light: "#f1f5f9", dark: "#1e293b" },
-  "secondary-foreground": { light: "#0f172a", dark: "#f8fafc" },
-  muted: { light: "#f1f5f9", dark: "#1e293b" },
-  "muted-foreground": { light: "#64748b", dark: "#94a3b8" },
-  accent: { light: "#f1f5f9", dark: "#1e293b" },
-  "accent-foreground": { light: "#0f172a", dark: "#f8fafc" },
-  destructive: { light: "#ef4444", dark: "#dc2626" },
-  "destructive-foreground": { light: "#ffffff", dark: "#fef2f2" },
-  border: { light: "#e2e8f0", dark: "#1e293b" },
-  input: { light: "#e2e8f0", dark: "#1e293b" },
-  ring: { light: "#3b82f6", dark: "#60a5fa" },
-};
-
-export const getThemeColorValue = (colorKey: string, isDark: boolean) => {
-  return getThemeValue(
-    themeColors[colorKey].light,
-    themeColors[colorKey].dark,
-    isDark
-  );
-};
-
-interface ThemeProviderProps {
-  children: ReactNode;
-}
-
-export const ThemeProvider: React.FC<ThemeProviderProps> = ({
-  children,
-}: ThemeProviderProps) => {
-  const [mode, setMode] = useState<ThemeMode>("system");
-  const [systemColorScheme, setSystemColorScheme] = useState<ColorSchemeName>(
-    Appearance.getColorScheme()
-  );
-
-  // Load saved theme mode
   useEffect(() => {
-    const loadTheme = async () => {
-      try {
-        const savedMode = await storage.getItem("theme-mode");
-        if (
-          savedMode &&
-          (savedMode === "system" ||
-            savedMode === "light" ||
-            savedMode === "dark")
-        ) {
-          setMode(savedMode as ThemeMode);
-        }
-      } catch (error) {
-        console.error("Failed to load theme mode:", error);
-      }
-    };
-    loadTheme();
-  }, []);
-
-  // Listen to system color scheme changes
-  useEffect(() => {
-    const subscription = Appearance.addChangeListener(({ colorScheme }) => {
-      setSystemColorScheme(colorScheme);
+    const unsubscribe = subscribeToGlobalTheme(() => {
+      console.log("🔄 useThemeAware: forcing re-render");
+      setUpdate({});
     });
-    return () => subscription?.remove();
+    return unsubscribe;
   }, []);
 
-  // Save theme mode
-  const handleSetMode = async (newMode: ThemeMode) => {
-    try {
-      setMode(newMode);
-      await storage.setItem("theme-mode", newMode);
-    } catch (error) {
-      console.error("Failed to save theme mode:", error);
-    }
-  };
-
-  // Calculate isDark based on mode and system
-  const isDark =
-    mode === "dark" || (mode === "system" && systemColorScheme === "dark");
-
-  // Update the global theme context for cs() function
-  useEffect(() => {
-    setThemeContext({ isDark });
-  }, [isDark]);
-
-  // Toggle between light and dark (skip system)
-  const toggleTheme = () => {
-    const newMode = isDark ? "light" : "dark";
-    handleSetMode(newMode);
-  };
-
-  // Create theme object based on current mode
-  const theme = {
-    colors: {
-      background: isDark ? "#0f0f23" : "#ffffff",
-      foreground: isDark ? "#ffffff" : "#0f0f23",
-      text: isDark ? "#ffffff" : "#0f0f23",
-      primary: isDark ? "#3b82f6" : "#2563eb",
-      secondary: isDark ? "#1f2937" : "#f3f4f6",
-      accent: isDark ? "#8b5cf6" : "#7c3aed",
-      muted: isDark ? "#374151" : "#6b7280",
-      border: isDark ? "#374151" : "#d1d5db",
-      input: isDark ? "#1f2937" : "#ffffff",
-      ring: isDark ? "#3b82f6" : "#2563eb",
-      destructive: isDark ? "#ef4444" : "#dc2626",
-    },
-    spacing: {
-      xs: 4,
-      sm: 8,
-      md: 16,
-      lg: 24,
-      xl: 32,
-      "2xl": 48,
-    },
-    borderRadius: {
-      none: 0,
-      sm: 2,
-      md: 6,
-      lg: 8,
-      xl: 12,
-      "2xl": 16,
-      full: 9999,
-    },
-    fontSize: {
-      xs: 12,
-      sm: 14,
-      base: 16,
-      lg: 18,
-      xl: 20,
-      "2xl": 24,
-      "3xl": 30,
-    },
-  };
-
-  const value: ThemeContextType = {
-    theme,
-    mode,
-    isDark,
-    setMode: handleSetMode,
-    toggleTheme,
-  };
-
-  return React.createElement(ThemeContext.Provider, { value }, children);
+  return null;
 };
 
-// Default export for the theme module
-const themeModule = {
-  ThemeProvider,
-  useTheme,
-  useResponsive,
-  getThemeColor,
-  getScreenWidth,
-  getScreenHeight,
-  isSmallScreen,
-  isMediumScreen,
-  isLargeScreen,
-  breakpoints,
-  getCurrentBreakpoint,
-  matchesBreakpoint,
+// Initialize global theme state on module load
+const initializeGlobalTheme = () => {
+  const systemScheme = Appearance.getColorScheme();
+  updateGlobalTheme({
+    mode: "system",
+    systemScheme,
+  });
 };
 
-export default themeModule;
+// Initialize immediately
+initializeGlobalTheme();

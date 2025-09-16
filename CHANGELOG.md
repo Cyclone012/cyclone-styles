@@ -5,6 +5,38 @@ All notable changes to CycloneWind will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.1] - 2025-09-16
+
+### Changed
+
+- **Clean API**: Simplified theme system exports by removing "New" prefixes for cleaner developer experience
+- `NewThemeProvider` → `ThemeProvider`
+- `useNewTheme` → `useTheme`
+- `useNewThemeAware` → `useThemeAware`
+
+### Fixed
+
+- Completely rewritten theme system using global state management instead of React Context
+- Fixed theme system issues where state changes wouldn't trigger UI updates
+- Resolved React Context reliability issues in theme switching
+- Enhanced theme persistence with AsyncStorage integration
+- Fixed color utilities to use theme-aware colors instead of static hex values
+
+### Improved
+
+- **Bulletproof Theme System**: New architecture using global state management with event-driven updates
+- **Forced Re-renders**: Theme changes now properly trigger component re-renders
+- **Better Integration**: Enhanced `cs()` function integration with theme system via `setThemeContext`
+- **Professional Git Setup**: Added comprehensive .gitignore and npm scripts for professional development workflow
+
+### Technical Details
+
+- Migrated from React Context to global state management for theme system
+- Added event listener system for theme change notifications
+- Implemented forced component re-renders on theme state changes
+- Enhanced cs() function with direct theme context integration
+- Removed old buggy theme system and simplified API
+
 ## [1.0.2] - 2025-09-15
 
 ### Fixed

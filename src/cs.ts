@@ -7,7 +7,6 @@ import {
 } from "react-native";
 import { styles } from "./styles";
 import { getConfig, getFlattenedColors } from "./config";
-import { getCustomUtilities } from "./global";
 
 // Type for any React Native style
 type Style = ViewStyle | TextStyle | ImageStyle;
@@ -29,19 +28,63 @@ interface ThemeContext {
 // Use var to avoid Temporal Dead Zone issues across circular imports
 var globalThemeContext: ThemeContext = { isDark: false };
 
+// Theme change listeners for forcing re-renders
+const themeChangeListeners = new Set<() => void>();
+
 /**
  * Set the global theme context for cs() function
  * This should be called by the ThemeProvider
  */
 export function setThemeContext(context: ThemeContext) {
+  const previousIsDark = globalThemeContext.isDark;
   globalThemeContext = context;
+
   // Clear cache when theme changes
   styleCache.clear();
+
+  // Notify all listeners if theme actually changed
+  if (previousIsDark !== context.isDark) {
+    themeChangeListeners.forEach((listener) => {
+      try {
+        listener();
+      } catch (error) {
+        console.warn("Theme change listener error:", error);
+      }
+    });
+  }
 }
 
 // Safe accessor to avoid undefined in edge cases
 export function getThemeContext(): ThemeContext {
   return globalThemeContext || { isDark: false };
+}
+
+/**
+ * Subscribe to theme changes - for internal use
+ * Returns unsubscribe function
+ */
+export function subscribeToThemeChanges(listener: () => void): () => void {
+  themeChangeListeners.add(listener);
+  return () => {
+    themeChangeListeners.delete(listener);
+  };
+}
+
+// Custom utilities registry
+interface CustomUtilities {
+  [className: string]: Style;
+}
+
+// Store for custom utilities
+const customUtilities: CustomUtilities = {};
+
+/**
+ * Register a custom utility class
+ */
+function registerCustomClass(className: string, style: Style): void {
+  customUtilities[className] = style;
+  // Clear cache when new utilities are registered
+  styleCache.clear();
 }
 
 // Function overloads for better TypeScript support
@@ -213,8 +256,23 @@ function getStyleForClass(className: string): Style | null {
     }
   }
 
-  // Check custom utilities first
-  const customUtilities = getCustomUtilities();
+  // Handle theme-aware colors BEFORE static styles
+  if (
+    className.startsWith("bg-") ||
+    className.startsWith("text-") ||
+    className.startsWith("border-") ||
+    className.startsWith("shadow-")
+  ) {
+    // Check if this should be theme-aware (not arbitrary values)
+    if (!className.includes("[")) {
+      const themeColorStyle = handleThemeColor(className);
+      if (themeColorStyle) {
+        return themeColorStyle;
+      }
+    }
+  }
+
+  // Check if there are any registered custom utilities
   if (customUtilities[className]) {
     return customUtilities[className];
   }
@@ -835,10 +893,13 @@ function handleColorOpacity(className: string): Style | null {
  * Get theme color by name using the configuration system
  */
 function getThemeColor(colorName: string): string | null {
-  // Get colors from configuration
+  // Get current theme context
+  const { isDark } = globalThemeContext;
+
+  // Get colors from configuration first
   const flattenedColors = getFlattenedColors();
 
-  // First try exact match
+  // First try exact match from config
   if (flattenedColors[colorName]) {
     return flattenedColors[colorName];
   }
@@ -852,10 +913,82 @@ function getThemeColor(colorName: string): string | null {
     }
   }
 
-  // Fallback to basic colors for backwards compatibility
+  // Theme-aware color mappings for common colors
+  const themeAwareColors: { [key: string]: { light: string; dark: string } } = {
+    // Standard theme colors
+    white: { light: "#FFFFFF", dark: "#000000" },
+    black: { light: "#000000", dark: "#FFFFFF" },
+
+    // Gray scale - adjust for better dark mode contrast
+    "gray-50": { light: "#F9FAFB", dark: "#1F2937" },
+    "gray-100": { light: "#F3F4F6", dark: "#111827" },
+    "gray-200": { light: "#E5E7EB", dark: "#374151" },
+    "gray-300": { light: "#D1D5DB", dark: "#4B5563" },
+    "gray-400": { light: "#9CA3AF", dark: "#6B7280" },
+    "gray-500": { light: "#6B7280", dark: "#9CA3AF" },
+    "gray-600": { light: "#4B5563", dark: "#D1D5DB" },
+    "gray-700": { light: "#374151", dark: "#E5E7EB" },
+    "gray-800": { light: "#1F2937", dark: "#F3F4F6" },
+    "gray-900": { light: "#111827", dark: "#F9FAFB" },
+
+    // Slate scale
+    "slate-50": { light: "#F8FAFC", dark: "#1E293B" },
+    "slate-100": { light: "#F1F5F9", dark: "#0F172A" },
+    "slate-200": { light: "#E2E8F0", dark: "#334155" },
+    "slate-300": { light: "#CBD5E1", dark: "#475569" },
+    "slate-400": { light: "#94A3B8", dark: "#64748B" },
+    "slate-500": { light: "#64748B", dark: "#94A3B8" },
+    "slate-600": { light: "#475569", dark: "#CBD5E1" },
+    "slate-700": { light: "#334155", dark: "#E2E8F0" },
+    "slate-800": { light: "#1E293B", dark: "#F1F5F9" },
+    "slate-900": { light: "#0F172A", dark: "#F8FAFC" },
+
+    // Neutral scale (similar to gray but slightly different)
+    "neutral-50": { light: "#FAFAFA", dark: "#262626" },
+    "neutral-100": { light: "#F5F5F5", dark: "#171717" },
+    "neutral-200": { light: "#E5E5E5", dark: "#404040" },
+    "neutral-300": { light: "#D4D4D4", dark: "#525252" },
+    "neutral-400": { light: "#A3A3A3", dark: "#737373" },
+    "neutral-500": { light: "#737373", dark: "#A3A3A3" },
+    "neutral-600": { light: "#525252", dark: "#D4D4D4" },
+    "neutral-700": { light: "#404040", dark: "#E5E5E5" },
+    "neutral-800": { light: "#262626", dark: "#F5F5F5" },
+    "neutral-900": { light: "#171717", dark: "#FAFAFA" },
+
+    // Stone scale
+    "stone-50": { light: "#FAFAF9", dark: "#292524" },
+    "stone-100": { light: "#F5F5F4", dark: "#1C1917" },
+    "stone-200": { light: "#E7E5E4", dark: "#44403C" },
+    "stone-300": { light: "#D6D3D1", dark: "#57534E" },
+    "stone-400": { light: "#A8A29E", dark: "#78716C" },
+    "stone-500": { light: "#78716C", dark: "#A8A29E" },
+    "stone-600": { light: "#57534E", dark: "#D6D3D1" },
+    "stone-700": { light: "#44403C", dark: "#E7E5E4" },
+    "stone-800": { light: "#292524", dark: "#F5F5F4" },
+    "stone-900": { light: "#1C1917", dark: "#FAFAF9" },
+
+    // Zinc scale
+    "zinc-50": { light: "#FAFAFA", dark: "#27272A" },
+    "zinc-100": { light: "#F4F4F5", dark: "#18181B" },
+    "zinc-200": { light: "#E4E4E7", dark: "#3F3F46" },
+    "zinc-300": { light: "#D4D4D8", dark: "#52525B" },
+    "zinc-400": { light: "#A1A1AA", dark: "#71717A" },
+    "zinc-500": { light: "#71717A", dark: "#A1A1AA" },
+    "zinc-600": { light: "#52525B", dark: "#D4D4D8" },
+    "zinc-700": { light: "#3F3F46", dark: "#E4E4E7" },
+    "zinc-800": { light: "#27272A", dark: "#F4F4F5" },
+    "zinc-900": { light: "#18181B", dark: "#FAFAFA" },
+  };
+
+  // Check for theme-aware colors
+  if (themeAwareColors[colorName]) {
+    return isDark
+      ? themeAwareColors[colorName].dark
+      : themeAwareColors[colorName].light;
+  }
+
+  // Fallback to basic colors (these remain the same for both themes)
   const basicColors: { [key: string]: string } = {
-    black: "#000000",
-    white: "#FFFFFF",
     red: "#EF4444",
     green: "#10B981",
     blue: "#3B82F6",
@@ -863,7 +996,6 @@ function getThemeColor(colorName: string): string | null {
     purple: "#8B5CF6",
     pink: "#EC4899",
     indigo: "#6366F1",
-    gray: "#6B7280",
     orange: "#F97316",
     teal: "#14B8A6",
     cyan: "#06B6D4",
@@ -1932,3 +2064,6 @@ export function merge(
 
 // Export the main function as default
 export default cs;
+
+// Add registerCustomClass as a property of the cs function
+cs.registerCustomClass = registerCustomClass;
