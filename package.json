@@ -1,6 +1,6 @@
 {
   "name": "cyclonewind",
-  "version": "1.2.1",
+  "version": "1.2.3",
   "description": "Complete Tailwind CSS utilities for React Native with powerful cs() function and zero Metro configuration required.",
   "main": "lib/index.js",
   "react-native": "lib/index.js",
