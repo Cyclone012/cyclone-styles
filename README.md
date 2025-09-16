@@ -1,7 +1,7 @@
 # 🌪️ CycloneWind
 
-[![npm version](https://img.shields.io/npm/v/cyclonewind.svg?style=flat-square)](https://www.npmjs.com/package/cyclonewind)
-[![npm downloads](https://img.shields.io/npm/dm/cyclonewind.svg?style=flat-square)](https://www.npmjs.com/package/cyclonewind)
+[![npm version](https://img.shields.io/npm/v/cyclone-cs-wind.svg?style=flat-square)](https://www.npmjs.com/package/cyclone-cs-wind)
+[![npm downloads](https://img.shields.io/npm/dm/cyclone-cs-wind.svg?style=flat-square)](https://www.npmjs.com/package/cyclone-cs-wind)
 [![TypeScript](https://img.shields.io/badge/TypeScript-Ready-blue.svg?style=flat-square)](https://www.typescriptlang.org/)
 [![React Native](https://img.shields.io/badge/React%20Native-Ready-green.svg?style=flat-square)](https://reactnative.dev/)
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](LICENSE)
@@ -26,7 +26,7 @@ A clean, lightweight library that brings all Tailwind CSS utilities to React Nat
 ### 1. Install
 
 ```bash
-npm install cyclonewind
+npm install cyclone-cs-wind
 ```
 
 ### 2. Basic Usage
@@ -34,7 +34,7 @@ npm install cyclonewind
 ```tsx
 import React from "react";
 import { View, Text } from "react-native";
-import { cs } from "cyclonewind";
+import { cs } from "cyclone-cs-wind";
 
 export default function App() {
   return (
@@ -52,7 +52,7 @@ export default function App() {
 ```tsx
 import React from "react";
 import { View, Text } from "react-native";
-import { cs, ThemeProvider } from "cyclonewind";
+import { cs, ThemeProvider } from "cyclone-cs-wind";
 
 export default function App() {
   return (
@@ -80,7 +80,7 @@ function YourAppContent() {
 ```tsx
 import React from "react";
 import { View, Text, ScrollView, Pressable } from "react-native";
-import { cs } from "cyclonewind";
+import { cs } from "cyclone-cs-wind";
 
 export default function MyScreen() {
   return (
@@ -116,7 +116,7 @@ export default function MyScreen() {
 ```tsx
 import React, { useState } from "react";
 import { View, Text, Pressable } from "react-native";
-import { cs } from "cyclonewind";
+import { cs } from "cyclone-cs-wind";
 
 function DynamicExample() {
   const [isActive, setIsActive] = useState(false);
@@ -148,7 +148,7 @@ function DynamicExample() {
 ```tsx
 import React from "react";
 import { View, Text, Pressable } from "react-native";
-import { cs, useTheme } from "cyclonewind";
+import { cs, useTheme } from "cyclone-cs-wind";
 
 function ThemeExample() {
   const { isDark, toggleTheme } = useTheme();
@@ -176,7 +176,7 @@ function ThemeExample() {
 
 ```tsx
 // Step 1: Register your custom styles (do this once, typically at app startup)
-import { cs } from "cyclonewind";
+import { cs } from "cyclone-cs-wind";
 
 cs.registerCustomClass("primary-button", {
   backgroundColor: "#007AFF",
@@ -241,7 +241,7 @@ export default function MyComponent() {
 
 ```tsx
 import { Platform } from "react-native";
-import { cs } from "cyclonewind";
+import { cs } from "cyclone-cs-wind";
 
 <View
   style={cs([
@@ -292,7 +292,7 @@ CycloneWind includes all standard Tailwind CSS utilities:
 ### Custom Theme Colors
 
 ```tsx
-import { configure } from "cyclonewind";
+import { configure } from "cyclone-cs-wind";
 
 configure({
   theme: {

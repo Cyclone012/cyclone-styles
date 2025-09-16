@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.3.0] - 2025-09-16
 
+### Breaking Changes
+
+- **Package Renamed**: Changed package name from `cyclonewind` to `cyclone-cs-wind`
+  - Update your imports: `npm install cyclone-cs-wind`
+  - All import statements remain the same: `import { cs } from "cyclone-cs-wind"`
+  - This provides a clearer, more descriptive package name
+
 ### Documentation
 
 - **Complete README Rewrite**: Comprehensive documentation update to reflect current API
