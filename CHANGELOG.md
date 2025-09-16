@@ -5,7 +5,26 @@ All notable changes to CycloneWind will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.2.1] - 2025-09-16
+## [1.2.3] - 2025-09-16
+
+### Changed
+
+- **Stable Release**: Official stable release with clean theme API
+- **Package Cleanup**: Unpublished confusing intermediate versions (1.2.0, 1.2.1) for cleaner version history
+
+### Features
+
+- **Clean Theme API**: Final stable API with `ThemeProvider`, `useTheme`, `useThemeAware`
+- **Professional npm Package**: Complete with proper build scripts, semantic versioning, and git workflow
+- **Production Ready**: Fully tested and ready for production use
+
+### Note
+
+- This is the recommended version to use
+- Versions 1.2.0 and 1.2.1 have been unpublished to avoid API confusion
+- Use `npm install cyclonewind@1.2.3` for the latest stable release
+
+## [1.2.1] - 2025-09-16 [UNPUBLISHED]
 
 ### Changed
 
