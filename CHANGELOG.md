@@ -5,6 +5,35 @@ All notable changes to CycloneWind will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.0] - 2025-09-16
+
+### Documentation
+
+- **Complete README Rewrite**: Comprehensive documentation update to reflect current API
+- **Removed Misleading Claims**: No more references to global imports or className support that don't exist
+- **Focused on cs() Function**: Clear documentation centered around the actual working API
+- **Accurate Examples**: All examples now use `style={cs("...")}` approach correctly
+- **Clean Feature List**: Only documents features that actually exist in the current version
+
+### Package Management
+
+- **Clean npm History**: Unpublished all previous versions including beta releases for fresh start
+- **Professional Git Workflow**: Proper semantic versioning and commit messages
+- **Updated Badges**: Accurate npm and documentation links
+
+### API Clarity
+
+- **No Global Imports**: Clearly documents that CycloneWind uses cs() function only
+- **No className Support**: Removes incorrect documentation about className prop support
+- **Theme System**: Properly documents ThemeProvider, useTheme, and useThemeAware APIs
+- **TypeScript Ready**: Full documentation of TypeScript support and utilities
+
+### Migration Notes
+
+- This version has the same API as 1.2.3 but with completely accurate documentation
+- No breaking changes to the cs() function or theme system
+- Use `style={cs("...")}` for all styling (no className support)
+
 ## [1.2.3] - 2025-09-16
 
 ### Changed
